@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from "next/server";
+import { joinSchema } from "@/lib/validation/member";
+import { connectToDatabase } from "@/lib/db";
+import { Member } from "@/models/Member";
+import { hashPassword } from "@/lib/auth";
+import { getNextMemberId } from "@/lib/counters";
+import { saveFile } from "@/lib/storage";
+
+export async function POST(request: NextRequest) {
+  const formData = await request.formData();
+  const raw = Object.fromEntries(formData.entries());
+
+  const parsed = joinSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid form data" }, { status: 400 });
+  }
+  const data = parsed.data;
+
+  await connectToDatabase();
+
+  const existing = await Member.findOne({ email: data.email.toLowerCase() });
+  if (existing) {
+    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+  }
+
+  let photoUrl: string | undefined;
+  const photo = formData.get("photo");
+  if (photo instanceof File && photo.size > 0) {
+    const buffer = Buffer.from(await photo.arrayBuffer());
+    photoUrl = await saveFile(buffer, "members", photo.name);
+  }
+
+  const memberId = await getNextMemberId();
+  const passwordHash = await hashPassword(data.password);
+
+  const member = await Member.create({
+    memberId,
+    fullName: data.fullName,
+    email: data.email.toLowerCase(),
+    passwordHash,
+    status: "pending",
+    photoUrl,
+    dob: data.dob,
+    gender: data.gender,
+    bloodGroup: data.bloodGroup,
+    primaryMobile: data.primaryMobile,
+    country: data.country,
+    emergencyContact: {
+      fullName: data.emergencyFullName,
+      relationship: data.emergencyRelationship,
+      phone: data.emergencyPhone,
+    },
+    motorcycle: {
+      make: data.make,
+      model: data.model,
+      year: data.year,
+      licensePlate: data.licensePlate,
+    },
+    ridingExperienceYears: data.ridingExperienceYears,
+    inAnotherRidingGroup: data.inAnotherRidingGroup,
+    totalKmWithClub: 0,
+  });
+
+  return NextResponse.json({ ok: true, memberId: member.memberId }, { status: 201 });
+}

@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  --pt-black: #0a0908;
+  --pt-black-soft: #151311;
+  --pt-black-card: #1c1916;
+  --pt-gold: #dda365;
+  --pt-gold-bright: #e8be8f;
+  --pt-gold-deep: #946737;
+  --pt-gold-dark: #5e3810;
+  --pt-cream: #f3ead9;
+  --pt-muted: #a89a86;
+  --pt-border: #33291f;
+
+  --background: var(--pt-black);
+  --foreground: var(--pt-cream);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-pt-black: var(--pt-black);
+  --color-pt-black-soft: var(--pt-black-soft);
+  --color-pt-black-card: var(--pt-black-card);
+  --color-pt-gold: var(--pt-gold);
+  --color-pt-gold-bright: var(--pt-gold-bright);
+  --color-pt-gold-deep: var(--pt-gold-deep);
+  --color-pt-gold-dark: var(--pt-gold-dark);
+  --color-pt-cream: var(--pt-cream);
+  --color-pt-muted: var(--pt-muted);
+  --color-pt-border: var(--pt-border);
+  --font-sans: var(--font-poppins);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--pt-gold);
+  color: var(--pt-black);
+}
+
+/* Buttons don't get pointer cursor by default in browsers — every
+   clickable control on the site should look clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a,
+label[for],
+input[type="file"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Pure-CSS marquee for the trusted-partners strip — no jQuery/OwlCarousel. */
+@keyframes pt-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.pt-marquee-track {
+  animation: pt-marquee 28s linear infinite;
+}
+
+.pt-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-marquee-track {
+    animation: none;
+  }
+}
