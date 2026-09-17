@@ -161,6 +161,21 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
                 ))}
               </ul>
             )}
+
+            {session?.role === "admin" && (
+              <div className="mt-5 pt-4 border-t border-pt-border/70 flex flex-col gap-2">
+                <Link href={`/manage-rides/${data._id}/members`} className="text-sm text-pt-gold hover:underline">
+                  Manage Riders →
+                </Link>
+                <a
+                  href={`/api/manage-rides/${data._id}/members/export`}
+                  download
+                  className="text-sm text-pt-muted hover:text-pt-gold"
+                >
+                  Export Roster (.txt)
+                </a>
+              </div>
+            )}
           </Card>
         </div>
       </div>

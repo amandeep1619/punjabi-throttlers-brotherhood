@@ -8,6 +8,9 @@ import { verifySession } from "./lib/jwt";
 
 const PUBLIC_PAGES = new Set(["/", "/join", "/login", "/policies"]);
 const PUBLIC_API_PREFIXES = ["/api/auth/", "/api/join"];
+// Pages that only make sense for a logged-out visitor — an already-logged-in
+// user gets bounced home instead of seeing the login/join form again.
+const GUEST_ONLY_PAGES = new Set(["/login", "/join"]);
 
 function isAdminPath(pathname: string): boolean {
   return pathname.startsWith("/manage-") || pathname.startsWith("/api/manage-");
@@ -22,10 +25,14 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isApi = pathname.startsWith("/api/");
 
-  if (isPublic(pathname)) return NextResponse.next();
-
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = token ? verifySession(token) : null;
+
+  if (session && GUEST_ONLY_PAGES.has(pathname)) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (isPublic(pathname)) return NextResponse.next();
 
   if (!session) {
     if (isApi) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
