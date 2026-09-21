@@ -9,5 +9,5 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const result = await enrollMemberInRide(id, session.userId);
   if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, queued: result.queued });
 }

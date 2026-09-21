@@ -11,12 +11,18 @@ export async function getLatestRide() {
 
 export async function getFeaturedRide() {
   await connectToDatabase();
-  return Ride.findOne({ featured: true }).sort({ startDate: -1 }).lean();
+  return Ride.findOne({ featured: true })
+    .sort({ startDate: -1 })
+    .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
+    .lean();
 }
 
 export async function getNextUpcomingRide() {
   await connectToDatabase();
-  return Ride.findOne({ status: "upcoming" }).sort({ startDate: 1 }).lean();
+  return Ride.findOne({ status: "upcoming" })
+    .sort({ startDate: 1 })
+    .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
+    .lean();
 }
 
 /** Rides a given member is enrolled in — "My Rides". */
@@ -60,7 +66,7 @@ export async function listRides({
       .sort({ startDate: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .select("title description banner distanceKm startDate endDate status tags featured")
+      .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
       .lean(),
     Ride.countDocuments(filter),
   ]);
@@ -85,15 +91,13 @@ export async function enrollMemberInRide(rideId: string, memberId: string) {
   if (ride.enrolledMembers.some((m) => m.toString() === memberId)) {
     return { ok: false as const, reason: "Already enrolled" };
   }
-  // ponytail: check-then-push, not an atomic $expr update — a two-rider dead
-  // heat on the very last slot could over-enroll by one. Not worth a
-  // transaction at this club's scale (human-paced clicks, not a queue).
-  if (ride.maxSlots && ride.enrolledMembers.length >= ride.maxSlots) {
-    return { ok: false as const, reason: "This ride is full" };
-  }
+  // Slots are a soft cap, not a hard one: once full, enrolling still
+  // succeeds — the rider just joins past capacity (a waitlist/queue by
+  // effect, not a separate tracked state) rather than being blocked.
+  const queued = Boolean(ride.maxSlots && ride.enrolledMembers.length >= ride.maxSlots);
   ride.enrolledMembers.push(new mongoose.Types.ObjectId(memberId));
   await ride.save();
-  return { ok: true as const };
+  return { ok: true as const, queued };
 }
 
 /**
@@ -116,6 +120,7 @@ export async function completeRide(rideId: string) {
       );
       ride.status = "completed";
       ride.kmAwarded = true;
+      ride.completedAt = new Date();
       await ride.save({ session });
       awarded = true;
     });

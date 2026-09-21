@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUiStore } from "@/store/useUiStore";
 
+const QUEUE_TOOLTIP = "Slots are already full but we will add you into the queue if you want";
+
 export function EnrollButton({
   rideId,
   alreadyEnrolled,
@@ -29,7 +31,7 @@ export function EnrollButton({
         return;
       }
       setEnrolled(true);
-      showToast("You're enrolled! See you on the road.", "success");
+      showToast(data.queued ? "You're on the waitlist — we'll add you if a slot opens up." : "You're enrolled! See you on the road.", "success");
       router.refresh();
     } finally {
       setLoading(false);
@@ -44,17 +46,15 @@ export function EnrollButton({
     );
   }
 
-  if (isFull) {
-    return (
-      <Button variant="outline" size="lg" disabled className="w-full">
-        Ride Full
-      </Button>
-    );
-  }
-
   return (
-    <Button size="lg" className="w-full" onClick={handleEnroll} disabled={loading}>
-      {loading ? "Enrolling…" : "Enroll for this Ride"}
+    <Button
+      size="lg"
+      className="w-full"
+      onClick={handleEnroll}
+      disabled={loading}
+      title={isFull ? QUEUE_TOOLTIP : undefined}
+    >
+      {loading ? "Enrolling…" : "Enroll"}
     </Button>
   );
 }

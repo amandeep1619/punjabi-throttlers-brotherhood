@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
+import { Review } from "@/models/Review";
 import { rideFormSchema } from "@/lib/validation/ride";
 import { saveFile, deleteFile } from "@/lib/storage";
 
@@ -22,6 +23,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid ride data" }, { status: 400 });
   }
   const { bannerUrl, ...data } = parsed.data;
+
+  // zod's `.default()` fires even under `.partial()` when a key is entirely
+  // absent from input — so `tags`/`featured` would silently reset to their
+  // defaults on any partial update that doesn't mention them. Only apply
+  // fields that were actually present in this request.
+  const presentKeys = new Set([...Object.keys(raw), ...(tags ? ["tags"] : [])]);
+  for (const key of Object.keys(data) as (keyof typeof data)[]) {
+    if (!presentKeys.has(key)) delete data[key];
+  }
 
   await connectToDatabase();
   const ride = await Ride.findById(id);
@@ -56,6 +66,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   if (ride.banner?.source === "upload") await deleteFile(ride.banner.url);
   await Promise.all(ride.gallery.filter((g) => g.source === "upload").map((g) => deleteFile(g.url)));
+  await Review.deleteMany({ ride: id });
 
   return NextResponse.json({ ok: true });
 }

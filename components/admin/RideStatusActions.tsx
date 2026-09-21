@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUiStore } from "@/store/useUiStore";
 
-export function RideStatusActions({ rideId, status }: { rideId: string; status: string }) {
+export function RideStatusActions({
+  rideId,
+  status,
+  showCancel = true,
+  fullWidth = false,
+}: {
+  rideId: string;
+  status: string;
+  showCancel?: boolean;
+  fullWidth?: boolean;
+}) {
   const router = useRouter();
   const showToast = useUiStore((s) => s.showToast);
   const [loading, setLoading] = useState(false);
@@ -33,20 +43,29 @@ export function RideStatusActions({ rideId, status }: { rideId: string; status: 
 
   if (status === "upcoming") {
     return (
-      <div className="flex gap-2 shrink-0">
+      <div className={fullWidth ? "flex flex-col gap-2" : "flex gap-2 shrink-0"}>
         <Button
-          size="sm"
+          size={fullWidth ? "lg" : "sm"}
           variant="outline"
           disabled={loading}
+          className={fullWidth ? "w-full" : undefined}
           onClick={() =>
             setStatus("completed", "Mark this ride completed? Km will be awarded to every enrolled member.")
           }
         >
-          Mark Completed
+          Mark as Completed
         </Button>
-        <Button size="sm" variant="danger" disabled={loading} onClick={() => setStatus("cancelled", "Cancel this ride?")}>
-          Cancel
-        </Button>
+        {showCancel && (
+          <Button
+            size={fullWidth ? "lg" : "sm"}
+            variant="danger"
+            disabled={loading}
+            className={fullWidth ? "w-full" : undefined}
+            onClick={() => setStatus("cancelled", "Cancel this ride?")}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     );
   }

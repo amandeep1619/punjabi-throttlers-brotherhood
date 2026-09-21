@@ -112,6 +112,11 @@ export default function RideForm({
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Unchecked checkboxes send no FormData entry at all — this hidden
+            "false" fallback (overridden by the checkbox's "true" when checked,
+            since FormData keeps both and the last entry wins) is what lets the
+            server tell "explicitly unchecked" apart from "field omitted". */}
+        <input type="hidden" name="featured" value="false" />
         <input type="checkbox" id="featured" name="featured" value="true" defaultChecked={defaults?.featured} className="h-4 w-4 accent-pt-gold" />
         <label htmlFor="featured" className="text-sm text-pt-cream">
           Mark as featured ride

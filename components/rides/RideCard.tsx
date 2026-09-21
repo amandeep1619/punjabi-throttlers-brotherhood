@@ -17,7 +17,15 @@ export type RideCardData = {
   featured?: boolean;
 };
 
-export function RideCard({ ride, size = "md" }: { ride: RideCardData; size?: "md" | "lg" }) {
+export function RideCard({
+  ride,
+  size = "md",
+  isEnrolled = false,
+}: {
+  ride: RideCardData;
+  size?: "md" | "lg";
+  isEnrolled?: boolean;
+}) {
   const dateLabel = new Date(ride.startDate).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -77,9 +85,9 @@ export function RideCard({ ride, size = "md" }: { ride: RideCardData; size?: "md
         </div>
 
         <div className="pt-1">
-          {ride.status === "upcoming" ? (
+          {ride.status === "upcoming" && !isEnrolled ? (
             <LinkButton href={`/rides/${ride._id}`} size="sm" className="w-full">
-              Enroll / View Details
+              Enroll
             </LinkButton>
           ) : (
             <LinkButton href={`/rides/${ride._id}`} variant="outline" size="sm" className="w-full">

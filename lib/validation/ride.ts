@@ -20,7 +20,10 @@ export const rideFormSchema = z.object({
   endDate: z.coerce.date().optional(),
   status: z.enum(rideStatusOptions).default("upcoming"),
   tags: z.array(z.string().trim().min(1)).default([]),
-  featured: z.coerce.boolean().default(false),
+  // Not z.coerce.boolean() — that reads ANY non-empty string as true,
+  // including the literal string "false" (JS truthy coercion), which is
+  // exactly the value the form's hidden-checkbox-fallback input sends.
+  featured: z.preprocess((v) => v === "true" || v === true, z.boolean()).default(false),
   bannerUrl: z.string().trim().optional(), // used only when banner source is "external"
   // Optional ride capacity — blank input means unlimited, not zero.
   maxSlots: z.preprocess(

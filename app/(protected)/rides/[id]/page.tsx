@@ -9,6 +9,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
 import { GalleryFilter } from "@/components/rides/GalleryFilter";
 import { EnrollButton } from "@/components/rides/EnrollButton";
+import { RideStatusActions } from "@/components/admin/RideStatusActions";
+import { ReviewForm } from "@/components/rides/ReviewForm";
+import { ReviewList } from "@/components/rides/ReviewList";
+import { StarDisplay } from "@/components/ui/StarRating";
+import { getRideReviews, getMemberReviewForRide, getReviewEligibility } from "@/lib/queries/reviews";
 
 type EnrolledMember = { _id: string; memberId: string; fullName: string; photoUrl?: string; location?: string };
 type RideDetail = {
@@ -22,6 +27,7 @@ type RideDetail = {
   status: "upcoming" | "completed" | "cancelled";
   tags: string[];
   maxSlots?: number;
+  completedAt?: string;
   itinerary: { day: string; title: string; description: string }[];
   gallery: { _id: string; url: string; type: "photo" | "video"; source: "upload" | "external" }[];
   enrolledMembers: EnrolledMember[];
@@ -42,6 +48,22 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
   const data = toPlain<RideDetail>(ride);
   const alreadyEnrolled = session ? data.enrolledMembers.some((m) => m._id === session.userId) : false;
   const isFull = Boolean(data.maxSlots && data.enrolledMembers.length >= data.maxSlots);
+
+  const [reviews, myReview] =
+    data.status === "completed"
+      ? await Promise.all([
+          getRideReviews(id),
+          session ? getMemberReviewForRide(id, session.userId) : Promise.resolve(null),
+        ])
+      : [[], null];
+  const reviewData = toPlain<
+    { _id: string; rating: number; text: string; createdAt: string; member: { fullName: string; photoUrl?: string } | null }[]
+  >(reviews);
+  const myReviewData = myReview ? toPlain<{ rating: number; text: string }>(myReview) : null;
+  const eligibility = getReviewEligibility(ride, session?.userId);
+  const averageRating = reviewData.length
+    ? reviewData.reduce((sum, r) => sum + r.rating, 0) / reviewData.length
+    : 0;
 
   const dateRange = `${new Date(data.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}${
     data.endDate ? ` – ${new Date(data.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}` : ""
@@ -66,7 +88,7 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
         <SmartImage src={data.banner.url} alt={data.title} fill className="object-cover" />
         <div className="absolute inset-0 bg-linear-to-t from-pt-black via-pt-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 mx-auto max-w-7xl px-4 sm:px-6 pb-8">
-          <div className="flex gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <StatusBadge status={data.status} />
             {data.tags.map((tag) => (
               <span key={tag} className="text-[11px] px-2 py-0.5 rounded-full bg-pt-border/60 text-pt-muted">
@@ -122,11 +144,40 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
             <h2 className="text-xl font-semibold text-pt-cream mb-4">Gallery</h2>
             <GalleryFilter items={data.gallery} />
           </div>
+
+          {data.status === "completed" && (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-xl font-semibold text-pt-cream">Reviews</h2>
+                {reviewData.length > 0 && (
+                  <span className="flex items-center gap-2 text-sm text-pt-muted">
+                    <StarDisplay value={Math.round(averageRating)} size="sm" />
+                    {averageRating.toFixed(1)} · {reviewData.length} review{reviewData.length === 1 ? "" : "s"}
+                  </span>
+                )}
+              </div>
+
+              <Card className="p-5 mb-6">
+                {eligibility.eligible ? (
+                  <ReviewForm rideId={data._id} existing={myReviewData} />
+                ) : (
+                  <p className="text-sm text-pt-muted">{eligibility.reason}</p>
+                )}
+              </Card>
+
+              <ReviewList reviews={reviewData} />
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
           {data.status === "upcoming" && (
-            <EnrollButton rideId={data._id} alreadyEnrolled={alreadyEnrolled} isFull={isFull} />
+            <div className="space-y-3">
+              <EnrollButton rideId={data._id} alreadyEnrolled={alreadyEnrolled} isFull={isFull} />
+              {session?.role === "admin" && (
+                <RideStatusActions rideId={data._id} status={data.status} showCancel={false} fullWidth />
+              )}
+            </div>
           )}
 
           <Card className="p-5">

@@ -30,6 +30,7 @@ export interface RideDoc extends Document {
   featured: boolean;
   kmAwarded: boolean;
   maxSlots?: number;
+  completedAt?: Date;
   banner: RideMedia;
   itinerary: RideItineraryItem[];
   gallery: Types.DocumentArray<RideGalleryItem>;
@@ -77,6 +78,10 @@ const RideSchema = new Schema<RideDoc>(
     kmAwarded: { type: Boolean, default: false },
     // Optional — absent/undefined means unlimited slots, no capacity UI shown.
     maxSlots: { type: Number, min: 1 },
+    // Set once, the moment the ride is actually marked completed — reviews
+    // become allowed 24h after this, not after startDate/endDate (a ride can
+    // be marked completed well after it actually happened).
+    completedAt: { type: Date },
     banner: { type: RideMediaSchema, required: true },
     itinerary: { type: [RideItinerarySchema], default: [] },
     gallery: { type: [RideGalleryItemSchema], default: [] },

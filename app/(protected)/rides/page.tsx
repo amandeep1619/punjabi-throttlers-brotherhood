@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { listRides, getFeaturedRide, getNextUpcomingRide } from "@/lib/queries/rides";
+import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
 import { RideFilters } from "@/components/rides/RideFilters";
 import { RideCard, type RideCardData } from "@/components/rides/RideCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { SectionHeading } from "@/components/ui/Card";
+
+function isRideEnrolled(ride: unknown, userId?: string): boolean {
+  if (!userId) return false;
+  const enrolledMembers = (ride as { enrolledMembers?: unknown[] }).enrolledMembers ?? [];
+  return enrolledMembers.some((m) => String(m) === userId);
+}
 
 export const metadata: Metadata = {
   title: "Rides",
@@ -23,7 +30,8 @@ export default async function RidesPage({
   const year = sp.year ?? "";
   const tag = sp.tag ?? "";
 
-  const [featured, upcoming, result] = await Promise.all([
+  const [session, featured, upcoming, result] = await Promise.all([
+    getSession(),
     getFeaturedRide(),
     getNextUpcomingRide(),
     listRides({ page, search, status: status || undefined, tag: tag || undefined, year: year ? Number(year) : undefined }),
@@ -51,20 +59,20 @@ export default async function RidesPage({
           {sameRide ? (
             <div>
               <p className="text-xs uppercase tracking-widest text-pt-gold mb-3">Featured &amp; Next Up</p>
-              <RideCard ride={toPlain<RideCardData>(featured)} size="lg" />
+              <RideCard ride={toPlain<RideCardData>(featured)} size="lg" isEnrolled={isRideEnrolled(featured, session?.userId)} />
             </div>
           ) : (
             <>
               {featured && (
                 <div>
                   <p className="text-xs uppercase tracking-widest text-pt-gold mb-3">Featured Ride</p>
-                  <RideCard ride={toPlain<RideCardData>(featured)} size="lg" />
+                  <RideCard ride={toPlain<RideCardData>(featured)} size="lg" isEnrolled={isRideEnrolled(featured, session?.userId)} />
                 </div>
               )}
               {upcoming && (
                 <div>
                   <p className="text-xs uppercase tracking-widest text-pt-gold mb-3">Next Upcoming Ride</p>
-                  <RideCard ride={toPlain<RideCardData>(upcoming)} size="lg" />
+                  <RideCard ride={toPlain<RideCardData>(upcoming)} size="lg" isEnrolled={isRideEnrolled(upcoming, session?.userId)} />
                 </div>
               )}
             </>
@@ -80,7 +88,11 @@ export default async function RidesPage({
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {result.items.map((ride) => (
-              <RideCard key={String(ride._id)} ride={toPlain<RideCardData>(ride)} />
+              <RideCard
+                key={String(ride._id)}
+                ride={toPlain<RideCardData>(ride)}
+                isEnrolled={isRideEnrolled(ride, session?.userId)}
+              />
             ))}
           </div>
         )}

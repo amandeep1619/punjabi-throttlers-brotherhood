@@ -27,7 +27,7 @@ export default async function MyRidesPage({ params }: { params: Promise<{ id: st
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((ride) => (
-            <RideCard key={ride._id} ride={ride} />
+            <RideCard key={ride._id} ride={ride} isEnrolled />
           ))}
         </div>
       )}

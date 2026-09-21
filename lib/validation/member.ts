@@ -25,7 +25,10 @@ export const joinSchema = z.object({
   licensePlate: z.string().trim().min(3, "Enter the license plate number"),
 
   ridingExperienceYears: z.coerce.number().min(0).max(80),
-  inAnotherRidingGroup: z.coerce.boolean().default(false),
+  // Not z.coerce.boolean() — the client always sends this as the literal
+  // string "true"/"false" (via FormData), and coerce.boolean() reads ANY
+  // non-empty string, including "false", as true (JS truthy coercion).
+  inAnotherRidingGroup: z.preprocess((v) => v === "true" || v === true, z.boolean()).default(false),
 });
 
 export type JoinInput = z.output<typeof joinSchema>;
