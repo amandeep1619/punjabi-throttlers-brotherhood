@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SmartImage } from "@/components/ui/SmartImage";
 import { toYoutubeEmbedUrl } from "@/lib/media";
 
 type GalleryItem = { _id: string; url: string; type: "photo" | "video"; source: "upload" | "external" };
@@ -28,17 +27,29 @@ export function GalleryFilter({ items }: { items: GalleryItem[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {/* CSS-columns masonry — each photo keeps its natural aspect ratio and
+          just flows into the next column, instead of being force-cropped
+          into a fixed square (which is what "doesn't fit" was about). Plain
+          <img>, not next/image: masonry needs each item's real height before
+          layout, which next/image's `fill` mode can't give without knowing
+          dimensions up front — these are user-uploaded/external photos of
+          unknown size. */}
+      <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 [column-fill:balance]">
         {filtered.map((item) => (
-          <div key={item._id} className="relative aspect-square rounded-xl overflow-hidden bg-pt-black-soft border border-pt-border">
+          <div key={item._id} className="mb-3 break-inside-avoid rounded-xl overflow-hidden bg-pt-black-soft border border-pt-border">
             {item.type === "photo" ? (
-              <SmartImage src={item.url} alt="" fill className="object-cover" />
-            ) : toYoutubeEmbedUrl(item.url) ? (
-              // YouTube/Instagram-style page links need an iframe embed.
-              <iframe src={toYoutubeEmbedUrl(item.url)!} allowFullScreen className="h-full w-full" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.url} alt="" loading="lazy" className="w-full h-auto block" />
             ) : (
-              // Uploaded files and direct external video links (.mp4 etc.) both play directly.
-              <video src={item.url} controls className="h-full w-full object-cover" />
+              <div className="aspect-video">
+                {toYoutubeEmbedUrl(item.url) ? (
+                  // YouTube/Instagram-style page links need an iframe embed.
+                  <iframe src={toYoutubeEmbedUrl(item.url)!} allowFullScreen className="h-full w-full" />
+                ) : (
+                  // Uploaded files and direct external video links (.mp4 etc.) both play directly.
+                  <video src={item.url} controls className="h-full w-full object-cover" />
+                )}
+              </div>
             )}
           </div>
         ))}

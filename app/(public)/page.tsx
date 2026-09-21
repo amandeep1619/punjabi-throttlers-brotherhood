@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { getClubStats } from "@/lib/queries/stats";
 import { getTodaysBirthdays } from "@/lib/queries/members";
-import { getLatestRide } from "@/lib/queries/rides";
+import { listUpcomingRides, listRecentCompletedRides, isRideEnrolled } from "@/lib/queries/rides";
 import { getTopMembers } from "@/lib/queries/members";
 import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
 import Hero from "@/components/home/Hero";
 import BirthdaySection from "@/components/home/BirthdaySection";
-import LatestRideSection from "@/components/home/LatestRideSection";
+import { RidesPreviewSection } from "@/components/home/RidesPreviewSection";
 import PartnersMarquee from "@/components/home/PartnersMarquee";
 import TopMembersSection from "@/components/home/TopMembersSection";
 import type { RideCardData } from "@/components/rides/RideCard";
@@ -21,12 +21,20 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const session = await getSession();
-  const [stats, birthdays, latestRide, topMembers] = await Promise.all([
+  const [stats, birthdays, upcomingRides, completedRides, topMembers] = await Promise.all([
     getClubStats(),
     getTodaysBirthdays(),
-    getLatestRide(),
+    listUpcomingRides(5),
+    listRecentCompletedRides(5),
     getTopMembers(5, session?.userId),
   ]);
+
+  const enrolledUpcomingIds = new Set(
+    upcomingRides.filter((r) => isRideEnrolled(r, session?.userId)).map((r) => String(r._id))
+  );
+  const enrolledCompletedIds = new Set(
+    completedRides.filter((r) => isRideEnrolled(r, session?.userId)).map((r) => String(r._id))
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -42,7 +50,18 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Hero stats={stats} />
       <BirthdaySection birthdays={toPlain(birthdays)} />
-      <LatestRideSection ride={latestRide ? toPlain<RideCardData>(latestRide) : null} />
+      <RidesPreviewSection
+        eyebrow="Upcoming Rides"
+        title="Fresh off the highway"
+        rides={toPlain<RideCardData[]>(upcomingRides)}
+        enrolledRideIds={enrolledUpcomingIds}
+      />
+      <RidesPreviewSection
+        eyebrow="Previous Rides"
+        title="Memories from the road"
+        rides={toPlain<RideCardData[]>(completedRides)}
+        enrolledRideIds={enrolledCompletedIds}
+      />
       <PartnersMarquee />
       <TopMembersSection members={toPlain<MemberCardData[]>(topMembers)} />
     </>

@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { listRides, getFeaturedRide, getNextUpcomingRide } from "@/lib/queries/rides";
+import { listRides, getFeaturedRide, getNextUpcomingRide, isRideEnrolled } from "@/lib/queries/rides";
 import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
 import { RideFilters } from "@/components/rides/RideFilters";
 import { RideCard, type RideCardData } from "@/components/rides/RideCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { SectionHeading } from "@/components/ui/Card";
-
-function isRideEnrolled(ride: unknown, userId?: string): boolean {
-  if (!userId) return false;
-  const enrolledMembers = (ride as { enrolledMembers?: unknown[] }).enrolledMembers ?? [];
-  return enrolledMembers.some((m) => String(m) === userId);
-}
 
 export const metadata: Metadata = {
   title: "Rides",

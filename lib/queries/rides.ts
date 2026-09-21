@@ -4,25 +4,41 @@ import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { Member } from "@/models/Member";
 
-export async function getLatestRide() {
-  await connectToDatabase();
-  return Ride.findOne().sort({ startDate: -1 }).lean();
-}
+const CARD_FIELDS = "title description banner distanceKm startDate endDate status tags featured enrolledMembers";
 
 export async function getFeaturedRide() {
   await connectToDatabase();
-  return Ride.findOne({ featured: true })
-    .sort({ startDate: -1 })
-    .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
-    .lean();
+  return Ride.findOne({ featured: true }).sort({ startDate: -1 }).select(CARD_FIELDS).lean();
 }
 
 export async function getNextUpcomingRide() {
   await connectToDatabase();
-  return Ride.findOne({ status: "upcoming" })
-    .sort({ startDate: 1 })
-    .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
-    .lean();
+  return Ride.findOne({ status: "upcoming" }).sort({ startDate: 1 }).select(CARD_FIELDS).lean();
+}
+
+/** Up to `limit` soonest upcoming rides — homepage preview. */
+export async function listUpcomingRides(limit = 5) {
+  await connectToDatabase();
+  return Ride.find({ status: "upcoming" }).sort({ startDate: 1 }).limit(limit).select(CARD_FIELDS).lean();
+}
+
+/** Up to `limit` most recently completed rides — homepage preview. */
+export async function listRecentCompletedRides(limit = 5) {
+  await connectToDatabase();
+  return Ride.find({ status: "completed" }).sort({ startDate: -1 }).limit(limit).select(CARD_FIELDS).lean();
+}
+
+/**
+ * Whether `userId` is in a ride's enrolledMembers — accepts either raw
+ * ObjectIds or populated Member docs, since callers fetch rides both ways.
+ */
+export function isRideEnrolled(ride: unknown, userId?: string): boolean {
+  if (!userId) return false;
+  const enrolledMembers = (ride as { enrolledMembers?: unknown[] }).enrolledMembers ?? [];
+  return enrolledMembers.some((m) => {
+    const id = typeof m === "object" && m !== null && "_id" in (m as object) ? (m as { _id: unknown })._id : m;
+    return String(id) === userId;
+  });
 }
 
 /** Rides a given member is enrolled in — "My Rides". */
@@ -66,7 +82,7 @@ export async function listRides({
       .sort({ startDate: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .select("title description banner distanceKm startDate endDate status tags featured enrolledMembers")
+      .select(CARD_FIELDS)
       .lean(),
     Ride.countDocuments(filter),
   ]);
