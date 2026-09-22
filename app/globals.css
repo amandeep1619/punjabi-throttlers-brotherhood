@@ -81,3 +81,25 @@ button:disabled,
     animation: none;
   }
 }
+
+/* Zoom-in entrance for the badge detail modal. */
+@keyframes pt-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pt-modal-in {
+  animation: pt-modal-in 0.18s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-modal-in {
+    animation: none;
+  }
+}

@@ -100,6 +100,9 @@ export default function Navbar() {
               <Link href={`/me/${user.id}/rides`} onClick={() => setOpen(false)} className="text-sm text-pt-cream/80 hover:text-pt-gold">
                 My Rides
               </Link>
+              <Link href={`/me/${user.id}/badges`} onClick={() => setOpen(false)} className="text-sm text-pt-cream/80 hover:text-pt-gold">
+                Badges
+              </Link>
               <LogoutButton className="w-fit" />
             </>
           ) : (

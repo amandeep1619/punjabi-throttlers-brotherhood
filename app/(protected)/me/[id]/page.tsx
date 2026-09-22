@@ -19,6 +19,7 @@ type OwnProfile = {
   location?: string;
   permanentAddress?: string;
   motorcycle: { make: string; model: string; year: number; licensePlate: string };
+  emergencyContact: { fullName: string; relationship: string; phone: string };
 };
 
 export default async function MyProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -57,6 +58,9 @@ export default async function MyProfilePage({ params }: { params: Promise<{ id: 
             model: member.motorcycle.model,
             year: member.motorcycle.year,
             licensePlate: member.motorcycle.licensePlate,
+            emergencyFullName: member.emergencyContact.fullName,
+            emergencyRelationship: member.emergencyContact.relationship,
+            emergencyPhone: member.emergencyContact.phone,
           }}
         />
       </Card>

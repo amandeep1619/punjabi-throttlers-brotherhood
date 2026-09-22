@@ -52,6 +52,9 @@ export const meUpdateSchema = z.object({
   model: z.string().trim().min(1).optional(),
   year: z.coerce.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
   licensePlate: z.string().trim().min(3).optional(),
+  emergencyFullName: z.string().trim().min(2).optional(),
+  emergencyRelationship: z.string().trim().min(2).optional(),
+  emergencyPhone: z.string().trim().min(7).optional(),
 });
 
 export type MeUpdateInput = z.output<typeof meUpdateSchema>;

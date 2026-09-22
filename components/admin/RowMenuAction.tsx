@@ -7,6 +7,7 @@ import { useUiStore } from "@/store/useUiStore";
 export function RowMenuAction({
   url,
   method = "PATCH",
+  body,
   label,
   confirmMessage,
   successMessage,
@@ -14,6 +15,7 @@ export function RowMenuAction({
 }: {
   url: string;
   method?: string;
+  body?: Record<string, unknown>;
   label: string;
   confirmMessage?: string;
   successMessage?: string;
@@ -28,7 +30,10 @@ export function RowMenuAction({
     if (confirmMessage && !window.confirm(confirmMessage)) return;
     setLoading(true);
     try {
-      const res = await fetch(url, { method });
+      const res = await fetch(url, {
+        method,
+        ...(body && { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         showToast(data.error ?? "Action failed", "error");

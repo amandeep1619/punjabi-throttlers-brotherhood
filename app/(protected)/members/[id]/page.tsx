@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import MemberBadges from "@/components/badges/MemberBadges";
 
 type ProfileFields = {
   memberId: string;
@@ -113,6 +114,10 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
           )}
         </div>
       </Card>
+
+      <div className="mt-8">
+        <MemberBadges memberId={id} />
+      </div>
 
       <div className="mt-8 grid sm:grid-cols-2 gap-6">
         <Card className="p-6">

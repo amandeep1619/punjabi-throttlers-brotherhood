@@ -13,7 +13,8 @@ export async function PATCH(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid data" }, { status: 400 });
   }
-  const { make, model, year, licensePlate, ...rest } = parsed.data;
+  const { make, model, year, licensePlate, emergencyFullName, emergencyRelationship, emergencyPhone, ...rest } =
+    parsed.data;
 
   await connectToDatabase();
 
@@ -22,10 +23,13 @@ export async function PATCH(request: NextRequest) {
   if (model !== undefined) update["motorcycle.model"] = model;
   if (year !== undefined) update["motorcycle.year"] = year;
   if (licensePlate !== undefined) update["motorcycle.licensePlate"] = licensePlate;
+  if (emergencyFullName !== undefined) update["emergencyContact.fullName"] = emergencyFullName;
+  if (emergencyRelationship !== undefined) update["emergencyContact.relationship"] = emergencyRelationship;
+  if (emergencyPhone !== undefined) update["emergencyContact.phone"] = emergencyPhone;
 
   // id always comes from the session, never trusted from the client/URL.
   const member = await Member.findByIdAndUpdate(session.userId, { $set: update }, { returnDocument: "after" }).select(
-    "memberId fullName primaryMobile secondaryMobile location permanentAddress motorcycle"
+    "memberId fullName primaryMobile secondaryMobile location permanentAddress motorcycle emergencyContact"
   );
 
   if (!member) return NextResponse.json({ error: "Member not found" }, { status: 404 });

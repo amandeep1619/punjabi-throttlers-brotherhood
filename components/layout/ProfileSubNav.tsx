@@ -9,6 +9,7 @@ export default function ProfileSubNav({ memberId }: { memberId: string }) {
     { href: `/me/${memberId}`, label: "Manage Profile" },
     { href: `/me/${memberId}/password`, label: "Change Password" },
     { href: `/me/${memberId}/rides`, label: "My Rides" },
+    { href: `/me/${memberId}/badges`, label: "Badges" },
   ];
 
   return (

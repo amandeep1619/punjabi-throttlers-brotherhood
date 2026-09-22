@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { completeRide } from "@/lib/queries/rides";
+import { reevaluateAllActiveBadges } from "@/lib/queries/badges";
 import { rideStatusOptions } from "@/lib/validation/ride";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +20,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   if (status === "completed") {
     const result = await completeRide(id);
+    // Km/ride-count badges can change the moment a ride completes — recompute
+    // in the background so marking a ride done doesn't wait on badge math.
+    if (result.awarded) after(() => reevaluateAllActiveBadges());
     return NextResponse.json(result);
   }
 

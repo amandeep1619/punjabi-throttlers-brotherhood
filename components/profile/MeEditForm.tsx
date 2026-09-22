@@ -89,6 +89,24 @@ export default function MeEditForm({ defaults }: { defaults: MeUpdateInput }) {
         </div>
       </div>
 
+      <div className="grid sm:grid-cols-2 gap-5 pt-2 border-t border-pt-border">
+        <div className="sm:col-span-2 pt-4">
+          <p className="text-sm font-medium text-pt-cream">Emergency Contact</p>
+        </div>
+        <div>
+          <label className={labelClass}>Full Name</label>
+          <input {...register("emergencyFullName")} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Relationship</label>
+          <input {...register("emergencyRelationship")} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Phone Number</label>
+          <input {...register("emergencyPhone")} className={inputClass} />
+        </div>
+      </div>
+
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save Changes"}
       </Button>

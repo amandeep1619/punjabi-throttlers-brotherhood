@@ -61,6 +61,9 @@ export function ProfileDropdown({ user }: { user: NonNullable<AuthUser> }) {
           <Link href={`/me/${user.id}/rides`} className="block px-4 py-2.5 text-sm text-pt-cream hover:bg-pt-border/40">
             My Rides
           </Link>
+          <Link href={`/me/${user.id}/badges`} className="block px-4 py-2.5 text-sm text-pt-cream hover:bg-pt-border/40">
+            Badges
+          </Link>
           <div className="border-t border-pt-border my-1.5" />
           <button
             onClick={handleLogout}
