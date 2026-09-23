@@ -1,18 +1,13 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import path from "path";
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
-// ponytail: local-disk storage. Works for dev and a self-hosted VPS, but Vercel's
-// filesystem is ephemeral/read-only at runtime — files written here vanish on the
-// next deploy/cold start. Before a real Vercel launch, swap the two bodies below
-// for an S3-compatible SDK call; every caller only ever calls saveFile/deleteFile,
-// so nothing else in the app needs to change.
+// S3-backed storage. Every caller only ever calls saveFile/deleteFile, so this
+// is the one place that knows about buckets/keys — see DEPLOYMENT.md for the
+// bucket policy + IAM setup this expects.
 
 const UPLOAD_FOLDERS = ["members", "rides", "gallery"] as const;
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
-
-const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 
 const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15MB
 
@@ -32,6 +27,22 @@ const ALLOWED_TYPES: Record<string, string> = {
 /** Thrown for a bad *upload*, as opposed to a real server error — routes should turn this into a 400. */
 export class UploadError extends Error {}
 
+const BUCKET = process.env.AWS_S3_BUCKET;
+const REGION = process.env.AWS_REGION;
+if (!BUCKET || !REGION) {
+  throw new Error("AWS_S3_BUCKET and AWS_REGION must be set in the environment");
+}
+
+// Picks up AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY from the environment automatically.
+const s3 = new S3Client({ region: REGION });
+
+// Override with a CloudFront/custom domain later; defaults to the bucket's own
+// virtual-hosted-style URL, which is all a €1000/month setup needs on day one.
+const PUBLIC_BASE_URL = (process.env.AWS_S3_PUBLIC_URL || `https://${BUCKET}.s3.${REGION}.amazonaws.com`).replace(
+  /\/$/,
+  ""
+);
+
 export async function saveFile(file: File, folder: UploadFolder): Promise<string> {
   if (!UPLOAD_FOLDERS.includes(folder)) {
     throw new Error(`Invalid upload folder: ${folder}`);
@@ -48,19 +59,23 @@ export async function saveFile(file: File, folder: UploadFolder): Promise<string
     throw new UploadError("Unsupported file type — images and videos only.");
   }
 
-  const safeName = `${randomUUID()}${ext}`;
-  const dir = path.join(UPLOAD_ROOT, folder);
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, safeName), Buffer.from(await file.arrayBuffer()));
-  return `/uploads/${folder}/${safeName}`;
+  const key = `${folder}/${randomUUID()}${ext}`;
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: Buffer.from(await file.arrayBuffer()),
+      ContentType: file.type,
+      // Random UUID keys never change content, so cache forever — cuts repeat
+      // S3 GET/transfer costs, the main lever on a tight budget.
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
+  return `${PUBLIC_BASE_URL}/${key}`;
 }
 
 export async function deleteFile(url: string): Promise<void> {
-  if (!url.startsWith("/uploads/")) return; // external link, nothing to delete on disk
-  const filePath = path.join(process.cwd(), "public", url);
-  try {
-    await unlink(filePath);
-  } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-  }
+  if (!url.startsWith(PUBLIC_BASE_URL + "/")) return; // external link, not ours to delete
+  const key = url.slice(PUBLIC_BASE_URL.length + 1);
+  await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key })).catch(() => {});
 }
