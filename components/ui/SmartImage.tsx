@@ -1,10 +1,13 @@
 import Image from "next/image";
 
 /**
- * Local /uploads or /brand paths go through next/image for optimization.
- * External links (arbitrary domains: Instagram, Drive, etc.) fall back to a
- * plain <img> — configuring images.remotePatterns for arbitrary user-supplied
- * domains isn't practical, and these are admin-pasted, not user-uploaded.
+ * Local /brand paths go through next/image for optimization. Everything else
+ * — S3-hosted uploads (members/rides/gallery) and admin-pasted external links
+ * (Instagram, Drive, etc.) — falls back to a plain <img>. Two reasons: S3
+ * already serves those files cheaply/efficiently on its own, and configuring
+ * images.remotePatterns for arbitrary user-supplied domains isn't practical,
+ * so neither needs (or should pay for) next/image's on-request resizing —
+ * real savings on a small Lightsail instance's CPU budget.
  */
 export function SmartImage({
   src,
