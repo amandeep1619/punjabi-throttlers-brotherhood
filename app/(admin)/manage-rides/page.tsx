@@ -31,7 +31,7 @@ export default async function ManageRidesPage({
         {result.items.map((ride) => (
           <div
             key={String(ride._id)}
-            className="flex items-center gap-4 rounded-xl border border-pt-border bg-pt-black-card p-4"
+            className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-pt-border bg-pt-black-card p-4"
           >
             <div className="relative h-16 w-24 rounded-lg overflow-hidden shrink-0 bg-pt-black-soft">
               <SmartImage src={ride.banner.url} alt={ride.title} fill className="object-cover" />
@@ -45,12 +45,14 @@ export default async function ManageRidesPage({
                 {new Date(ride.startDate).toLocaleDateString("en-IN")} · {ride.distanceKm} km
               </p>
             </div>
-            <RideStatusActions rideId={String(ride._id)} status={ride.status} />
-            <RowMenu>
-              <RowMenuLink href={`/manage-rides/${ride._id}`}>Edit ride</RowMenuLink>
-              <RowMenuLink href={`/manage-rides/${ride._id}/members`}>Manage riders</RowMenuLink>
-              <RowMenuLink href={`/rides/${ride._id}`}>View public page</RowMenuLink>
-            </RowMenu>
+            <div className="flex w-full items-center gap-2 sm:w-auto">
+              <RideStatusActions rideId={String(ride._id)} status={ride.status} />
+              <RowMenu>
+                <RowMenuLink href={`/manage-rides/${ride._id}`}>Edit ride</RowMenuLink>
+                <RowMenuLink href={`/manage-rides/${ride._id}/members`}>Manage riders</RowMenuLink>
+                <RowMenuLink href={`/rides/${ride._id}`}>View public page</RowMenuLink>
+              </RowMenu>
+            </div>
           </div>
         ))}
         {result.items.length === 0 && (
