@@ -7,6 +7,10 @@ import { verifySession } from "./lib/jwt";
 // here with no separate Edge-safe verifier needed.
 
 const PUBLIC_PAGES = new Set(["/", "/join", "/login", "/policies"]);
+// /rides and /rides/<id> are public read-only pages — enrolling, reviewing,
+// etc. still go through /api/rides/*, which stays behind auth below (this
+// prefix only covers the pages, not the API).
+const PUBLIC_PAGE_PREFIXES = ["/rides"];
 const PUBLIC_API_PREFIXES = ["/api/auth/", "/api/join"];
 // Pages that only make sense for a logged-out visitor — an already-logged-in
 // user gets bounced home instead of seeing the login/join form again.
@@ -18,6 +22,9 @@ function isAdminPath(pathname: string): boolean {
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PAGES.has(pathname)) return true;
+  if (!pathname.startsWith("/api/") && PUBLIC_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return true;
+  }
   return PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
