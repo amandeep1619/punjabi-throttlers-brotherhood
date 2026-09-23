@@ -2,6 +2,7 @@ import "server-only";
 import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
 import type { MemberStatus } from "@/models/Member";
+import { escapeRegex } from "@/lib/format";
 
 const PUBLIC_CARD_FIELDS = "memberId fullName photoUrl totalKmWithClub location";
 const PROFILE_FIELDS =
@@ -51,7 +52,7 @@ export async function listMembersPublic({
   await connectToDatabase();
   const filter: Record<string, unknown> = { status: "active" };
   if (excludeId) filter._id = { $ne: excludeId };
-  if (search.trim()) filter.fullName = { $regex: search.trim(), $options: "i" };
+  if (search.trim()) filter.fullName = { $regex: escapeRegex(search.trim()), $options: "i" };
 
   const [items, total] = await Promise.all([
     Member.find(filter)
@@ -91,7 +92,7 @@ export async function listMembersAdmin({
   const filter: Record<string, unknown> = {};
   if (excludeId) filter._id = { $ne: excludeId };
   if (search.trim()) {
-    const term = search.trim();
+    const term = escapeRegex(search.trim());
     filter.$or = [{ fullName: { $regex: term, $options: "i" } }, { memberId: { $regex: term, $options: "i" } }];
   }
 

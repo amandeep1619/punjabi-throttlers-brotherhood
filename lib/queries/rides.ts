@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { Member } from "@/models/Member";
+import { escapeRegex } from "@/lib/format";
 
 const CARD_FIELDS = "title description banner distanceKm startDate endDate status tags featured enrolledMembers";
 
@@ -67,7 +68,7 @@ export async function listRides({
 }) {
   await connectToDatabase();
   const filter: Record<string, unknown> = {};
-  if (search.trim()) filter.title = { $regex: search.trim(), $options: "i" };
+  if (search.trim()) filter.title = { $regex: escapeRegex(search.trim()), $options: "i" };
   if (status) filter.status = status;
   if (tag) filter.tags = tag;
   if (year) {

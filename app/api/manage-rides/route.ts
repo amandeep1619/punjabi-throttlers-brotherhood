@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { rideFormSchema } from "@/lib/validation/ride";
-import { saveFile } from "@/lib/storage";
+import { saveFile, UploadError } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -29,8 +29,12 @@ export async function POST(request: NextRequest) {
   const bannerFile = formData.get("bannerFile");
   let banner: { url: string; source: "upload" | "external" };
   if (bannerFile instanceof File && bannerFile.size > 0) {
-    const buffer = Buffer.from(await bannerFile.arrayBuffer());
-    banner = { url: await saveFile(buffer, "rides", bannerFile.name), source: "upload" };
+    try {
+      banner = { url: await saveFile(bannerFile, "rides"), source: "upload" };
+    } catch (err) {
+      if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
   } else if (data.bannerUrl) {
     banner = { url: data.bannerUrl, source: "external" };
   } else {

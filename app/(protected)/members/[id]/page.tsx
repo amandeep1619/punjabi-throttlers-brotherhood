@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getMemberProfileById, getMemberAdminView } from "@/lib/queries/members";
+import { jsonLdScript } from "@/lib/jsonLd";
 import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
 import { Card } from "@/components/ui/Card";
@@ -56,7 +57,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
 
   return (
     <section className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-20">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
 
       <Card className="p-8 flex flex-col sm:flex-row gap-8 items-center sm:items-start text-center sm:text-left">
         <div className="relative h-32 w-32 rounded-full overflow-hidden ring-4 ring-pt-gold/40 bg-pt-black-soft shrink-0">

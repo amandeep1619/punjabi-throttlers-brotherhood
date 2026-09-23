@@ -4,9 +4,14 @@ import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
 import { hashPassword } from "@/lib/auth";
 import { getNextMemberId } from "@/lib/counters";
-import { saveFile } from "@/lib/storage";
+import { saveFile, UploadError } from "@/lib/storage";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  if (isRateLimited(`join:${clientIp(request)}`, 5, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+  }
+
   const formData = await request.formData();
   const raw = Object.fromEntries(formData.entries());
 
@@ -26,8 +31,12 @@ export async function POST(request: NextRequest) {
   let photoUrl: string | undefined;
   const photo = formData.get("photo");
   if (photo instanceof File && photo.size > 0) {
-    const buffer = Buffer.from(await photo.arrayBuffer());
-    photoUrl = await saveFile(buffer, "members", photo.name);
+    try {
+      photoUrl = await saveFile(photo, "members");
+    } catch (err) {
+      if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
   }
 
   const memberId = await getNextMemberId();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getClubStats } from "@/lib/queries/stats";
+import { jsonLdScript } from "@/lib/jsonLd";
 import { getTodaysBirthdays } from "@/lib/queries/members";
 import { listUpcomingRides, listRecentCompletedRides, isRideEnrolled } from "@/lib/queries/rides";
 import { getTopMembers } from "@/lib/queries/members";
@@ -47,7 +48,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <Hero stats={stats} />
       <BirthdaySection birthdays={toPlain(birthdays)} />
       <RidesPreviewSection

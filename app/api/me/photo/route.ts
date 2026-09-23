@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
-import { saveFile, deleteFile } from "@/lib/storage";
+import { saveFile, deleteFile, UploadError } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -18,8 +18,13 @@ export async function POST(request: NextRequest) {
   const member = await Member.findById(session.userId).select("photoUrl");
   if (!member) return NextResponse.json({ error: "Member not found" }, { status: 404 });
 
-  const buffer = Buffer.from(await photo.arrayBuffer());
-  const newUrl = await saveFile(buffer, "members", photo.name);
+  let newUrl: string;
+  try {
+    newUrl = await saveFile(photo, "members");
+  } catch (err) {
+    if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
+    throw err;
+  }
 
   const oldUrl = member.photoUrl;
   member.photoUrl = newUrl;

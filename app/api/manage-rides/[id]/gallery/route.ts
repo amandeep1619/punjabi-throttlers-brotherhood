@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
-import { saveFile } from "@/lib/storage";
+import { saveFile, UploadError } from "@/lib/storage";
 import { galleryExternalSchema } from "@/lib/validation/ride";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,8 +19,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (file instanceof File && file.size > 0) {
     const type = file.type.startsWith("video") ? "video" : "photo";
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await saveFile(buffer, "gallery", file.name);
+    let url: string;
+    try {
+      url = await saveFile(file, "gallery");
+    } catch (err) {
+      if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
     ride.gallery.push({ url, source: "upload", type });
   } else {
     const parsed = galleryExternalSchema.safeParse(Object.fromEntries(formData.entries()));

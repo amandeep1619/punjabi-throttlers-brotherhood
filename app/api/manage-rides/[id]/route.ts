@@ -4,7 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { Review } from "@/models/Review";
 import { rideFormSchema } from "@/lib/validation/ride";
-import { saveFile, deleteFile } from "@/lib/storage";
+import { saveFile, deleteFile, UploadError } from "@/lib/storage";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -41,9 +41,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const bannerFile = formData.get("bannerFile");
   if (bannerFile instanceof File && bannerFile.size > 0) {
-    const buffer = Buffer.from(await bannerFile.arrayBuffer());
     const oldBanner = ride.banner;
-    ride.banner = { url: await saveFile(buffer, "rides", bannerFile.name), source: "upload" };
+    try {
+      ride.banner = { url: await saveFile(bannerFile, "rides"), source: "upload" };
+    } catch (err) {
+      if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
     if (oldBanner?.source === "upload") await deleteFile(oldBanner.url);
   } else if (bannerUrl) {
     const oldBanner = ride.banner;

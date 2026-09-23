@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { loginSchema } from "@/lib/validation/member";
 import { findMemberByEmailWithPassword } from "@/lib/queries/members";
 import { verifyPassword, signSession, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 
 const STATUS_MESSAGES: Record<string, string> = {
   pending: "Your account is under review process, you will be notified once its approved",
   banned: "You are banned due to violation of policies",
 };
 
+const MAX_ATTEMPTS = 10;
+const WINDOW_MS = 10 * 60 * 1000;
+
 export async function POST(request: NextRequest) {
+  if (isRateLimited(`login:${clientIp(request)}`, MAX_ATTEMPTS, WINDOW_MS)) {
+    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { jsonLdScript } from "@/lib/jsonLd";
 import { getRideById } from "@/lib/queries/rides";
 import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
@@ -82,7 +83,7 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
 
       <div className="relative h-72 sm:h-96">
         <SmartImage src={data.banner.url} alt={data.title} fill className="object-cover" />
