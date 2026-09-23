@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
 import ClientProviders from "@/components/ClientProviders";
 import ToastViewport from "@/components/ui/ToastViewport";
+import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -36,6 +37,16 @@ export const metadata: Metadata = {
     description: "A brotherhood of riders united by the road.",
     images: ["/brand/logo.png"],
   },
+  appleWebApp: {
+    capable: true,
+    title: "PT Brotherhood",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0908",
+  colorScheme: "dark",
 };
 
 async function getInitialUser() {
@@ -63,6 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <ToastViewport />
         </ClientProviders>
+        <PwaRegister />
       </body>
     </html>
   );
