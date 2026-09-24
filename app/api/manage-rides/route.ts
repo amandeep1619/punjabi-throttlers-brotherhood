@@ -43,7 +43,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Provide a banner image (upload or link)" }, { status: 400 });
   }
 
-  const enrollSelf = raw.enrollSelf === "true";
+  // Admin picks whoever to pre-enroll (including themselves) via the
+  // member-search UI — only format-checked here, not re-verified against the
+  // DB, same trust level as the rest of this admin-only form.
+  const enrolledMemberIds = [...new Set(formData.getAll("enrolledMemberIds").map(String))].filter((id) =>
+    /^[0-9a-fA-F]{24}$/.test(id)
+  );
 
   await connectToDatabase();
   const ride = await Ride.create({
@@ -56,8 +61,9 @@ export async function POST(request: NextRequest) {
     tags: data.tags,
     featured: data.featured,
     maxSlots: data.maxSlots,
+    budget: data.budget,
     banner,
-    enrolledMembers: enrollSelf ? [session.userId] : [],
+    enrolledMembers: enrolledMemberIds,
   });
 
   if (ride.status === "upcoming") {

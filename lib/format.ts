@@ -16,6 +16,12 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["minute", 60],
 ];
 
+/** "₹5,000" style — undefined/null renders as "N/A", not "₹0". */
+export function formatCurrency(amount?: number | null): string {
+  if (amount === undefined || amount === null) return "N/A";
+  return `₹${amount.toLocaleString("en-IN")}`;
+}
+
 /** "2 weeks ago" style relative timestamp, e.g. for review dates. */
 export function formatRelativeTime(date: Date | string): string {
   const seconds = (new Date(date).getTime() - Date.now()) / 1000;

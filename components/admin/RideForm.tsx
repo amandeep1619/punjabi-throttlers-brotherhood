@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUiStore } from "@/store/useUiStore";
 import { rideStatusOptions } from "@/lib/validation/ride";
+import { MemberMultiSelect } from "@/components/admin/MemberMultiSelect";
 
 const inputClass =
   "w-full rounded-lg border border-pt-border bg-pt-black-soft px-4 py-2.5 text-pt-cream focus:outline-none focus:border-pt-gold";
@@ -21,6 +22,7 @@ export type RideFormDefaults = {
   featured: boolean;
   bannerUrl: string;
   maxSlots?: number | "";
+  budget?: number | "";
 };
 
 export default function RideForm({
@@ -99,16 +101,29 @@ export default function RideForm({
         </div>
       </div>
 
-      <div>
-        <label className={labelClass}>Max Slots (optional — leave blank for unlimited)</label>
-        <input
-          type="number"
-          min={1}
-          name="maxSlots"
-          defaultValue={defaults?.maxSlots ?? ""}
-          placeholder="e.g. 20"
-          className={inputClass}
-        />
+      <div className="grid sm:grid-cols-2 gap-5">
+        <div>
+          <label className={labelClass}>Max Slots (optional — leave blank for unlimited)</label>
+          <input
+            type="number"
+            min={1}
+            name="maxSlots"
+            defaultValue={defaults?.maxSlots ?? ""}
+            placeholder="e.g. 20"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Budget (optional, ₹)</label>
+          <input
+            type="number"
+            min={0}
+            name="budget"
+            defaultValue={defaults?.budget ?? ""}
+            placeholder="e.g. 5000"
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -124,11 +139,9 @@ export default function RideForm({
       </div>
 
       {!rideId && (
-        <div className="flex items-center gap-3">
-          <input type="checkbox" id="enrollSelf" name="enrollSelf" value="true" className="h-4 w-4 accent-pt-gold" />
-          <label htmlFor="enrollSelf" className="text-sm text-pt-cream">
-            Enroll me in this ride
-          </label>
+        <div>
+          <label className={labelClass}>Enroll Members (optional)</label>
+          <MemberMultiSelect name="enrolledMemberIds" />
         </div>
       )}
 

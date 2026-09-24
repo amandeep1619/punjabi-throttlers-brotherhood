@@ -17,7 +17,15 @@ export const rideFormSchema = z.object({
   description: z.string().trim().min(1, "Enter a description"),
   distanceKm: z.coerce.number().min(0),
   startDate: z.coerce.date(),
-  endDate: z.coerce.date().optional(),
+  // Same empty-string-to-undefined preprocess as maxSlots/budget below — an
+  // <input type="date"> left blank sends "" (present, not omitted), and
+  // z.coerce.date() on "" produces an Invalid Date that fails validation
+  // instead of being treated as "not set". Without this, creating any
+  // single-day ride (no end date) 400s.
+  endDate: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : v),
+    z.coerce.date().optional()
+  ),
   status: z.enum(rideStatusOptions).default("upcoming"),
   tags: z.array(z.string().trim().min(1)).default([]),
   // Not z.coerce.boolean() — that reads ANY non-empty string as true,
@@ -29,6 +37,11 @@ export const rideFormSchema = z.object({
   maxSlots: z.preprocess(
     (v) => (v === "" || v === undefined || v === null ? undefined : v),
     z.coerce.number().int().positive().optional()
+  ),
+  // Optional — blank input means "not tracked", rendered as N/A, not ₹0.
+  budget: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : v),
+    z.coerce.number().min(0).optional()
   ),
 });
 

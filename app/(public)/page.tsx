@@ -74,6 +74,7 @@ export default async function HomePage() {
         title="Fresh off the highway"
         rides={toPlain<RideCardData[]>(upcomingRides)}
         enrolledRideIds={enrolledUpcomingIds}
+        expandSingle
       />
       <RidesPreviewSection
         eyebrow="Previous Rides"

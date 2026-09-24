@@ -31,6 +31,7 @@ export interface RideDoc extends Document {
   kmAwarded: boolean;
   reviewReminderSent: boolean;
   maxSlots?: number;
+  budget?: number;
   completedAt?: Date;
   banner: RideMedia;
   itinerary: RideItineraryItem[];
@@ -82,6 +83,8 @@ const RideSchema = new Schema<RideDoc>(
     reviewReminderSent: { type: Boolean, default: false },
     // Optional — absent/undefined means unlimited slots, no capacity UI shown.
     maxSlots: { type: Number, min: 1 },
+    // Optional — absent/undefined renders as "N/A" on the ride page, not ₹0.
+    budget: { type: Number, min: 0 },
     // Set once, the moment the ride is actually marked completed — reviews
     // become allowed 24h after this, not after startDate/endDate (a ride can
     // be marked completed well after it actually happened).

@@ -4,6 +4,7 @@
 import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
 import type { MemberStatus } from "@/models/Member";
+import { Ride } from "@/models/Ride";
 import { escapeRegex } from "@/lib/format";
 
 const PUBLIC_CARD_FIELDS = "memberId fullName photoUrl totalKmWithClub location";
@@ -89,19 +90,44 @@ export async function listMembersAdmin({
   pageSize = 15,
   search = "",
   excludeId,
+  status,
+  noRideFrom,
+  noRideTo,
 }: {
   page?: number;
   pageSize?: number;
   search?: string;
   excludeId?: string;
+  /** Restrict to one member status — e.g. "active" for the ride-creation member picker. */
+  status?: string;
+  /**
+   * "Hasn't joined a ride" filter: excludes members enrolled in any ride
+   * whose startDate falls in [noRideFrom, noRideTo] (noRideTo optional —
+   * open-ended up to now for the 3/6/9-month presets, bounded for a custom
+   * range). Omitting noRideFrom shows everyone, matching the default view.
+   */
+  noRideFrom?: Date;
+  noRideTo?: Date;
 }) {
   await connectToDatabase();
   const filter: Record<string, unknown> = {};
-  if (excludeId) filter._id = { $ne: excludeId };
+  const excludedIds: string[] = [];
+  if (excludeId) excludedIds.push(excludeId);
+  if (status) filter.status = status;
   if (search.trim()) {
     const term = escapeRegex(search.trim());
     filter.$or = [{ fullName: { $regex: term, $options: "i" } }, { memberId: { $regex: term, $options: "i" } }];
   }
+
+  if (noRideFrom) {
+    const rideDateFilter: Record<string, unknown> = {
+      startDate: noRideTo ? { $gte: noRideFrom, $lte: noRideTo } : { $gte: noRideFrom },
+    };
+    const riddenMemberIds = await Ride.distinct("enrolledMembers", rideDateFilter);
+    excludedIds.push(...riddenMemberIds.map(String));
+  }
+
+  if (excludedIds.length > 0) filter._id = { $nin: excludedIds };
 
   const [items, total] = await Promise.all([
     Member.find(filter)

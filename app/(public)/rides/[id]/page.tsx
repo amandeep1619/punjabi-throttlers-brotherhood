@@ -16,6 +16,7 @@ import { ReviewList } from "@/components/rides/ReviewList";
 import { StarDisplay } from "@/components/ui/StarRating";
 import { getRideReviews, getMemberReviewForRide, getReviewEligibility } from "@/lib/queries/reviews";
 import { pageMetadata, fitTitle, fitDescription } from "@/lib/seo";
+import { formatCurrency } from "@/lib/format";
 
 type EnrolledMember = { _id: string; memberId: string; fullName: string; photoUrl?: string; location?: string };
 type RideDetail = {
@@ -29,6 +30,7 @@ type RideDetail = {
   status: "upcoming" | "completed" | "cancelled";
   tags: string[];
   maxSlots?: number;
+  budget?: number;
   completedAt?: string;
   itinerary: { day: string; title: string; description: string }[];
   gallery: { _id: string; url: string; type: "photo" | "video"; source: "upload" | "external" }[];
@@ -113,7 +115,7 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
         <div className="lg:col-span-2 space-y-10">
           <Card className="p-6">
             <p className="text-pt-muted whitespace-pre-line">{data.description}</p>
-            <div className="mt-6 grid sm:grid-cols-3 gap-4 text-sm">
+            <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-pt-muted text-xs uppercase">Dates</p>
                 <p className="text-pt-cream mt-1">{dateRange}</p>
@@ -128,6 +130,10 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
                   {data.enrolledMembers.length}
                   {data.maxSlots ? ` / ${data.maxSlots} slots filled` : " enrolled"}
                 </p>
+              </div>
+              <div>
+                <p className="text-pt-muted text-xs uppercase">Budget</p>
+                <p className="text-pt-cream mt-1">{formatCurrency(data.budget)}</p>
               </div>
             </div>
           </Card>
