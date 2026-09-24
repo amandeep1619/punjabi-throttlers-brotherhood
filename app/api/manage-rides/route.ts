@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { rideFormSchema } from "@/lib/validation/ride";
 import { saveFile, UploadError } from "@/lib/storage";
+import { sendPushToAllActiveMembers } from "@/lib/push";
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -57,6 +59,16 @@ export async function POST(request: NextRequest) {
     banner,
     enrolledMembers: enrollSelf ? [session.userId] : [],
   });
+
+  if (ride.status === "upcoming") {
+    after(() =>
+      sendPushToAllActiveMembers({
+        title: "New Ride",
+        body: `Checkout new Ride ${ride.title} scheduled by Admin`,
+        url: `/rides/${ride._id}`,
+      }).catch(() => {})
+    );
+  }
 
   return NextResponse.json({ ok: true, ride }, { status: 201 });
 }

@@ -134,6 +134,35 @@ crontab -e
 0 3 * * * /home/youruser/app/deploy/backup-db.sh >> /var/log/pt-backup.log 2>&1
 ```
 
+## 6. Push notifications
+
+Web Push (VAPID) — see `lib/push.ts`. Needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` in `.env.local` (generate once with
+`npx web-push generate-vapid-keys`).
+
+**No cron setup required — all three triggers run themselves:**
+
+- **New ride scheduled** fires inline from `POST /api/manage-rides` via
+  `after()`, request-scoped.
+- **Birthday** (daily, only if there's an actual birthday) and **review
+  reminder** (24h after a ride completes) run from an in-process scheduler
+  (`lib/scheduler.ts`), started once via Next's `instrumentation.ts` hook the
+  moment the server boots. It's a plain `setInterval` polling every 5
+  minutes inside the *same* Next.js process already serving web traffic —
+  not a separate worker/queue, so it costs no extra RAM on this box. It
+  self-heals across restarts: each check is idempotent (a `NotificationLog`
+  date marker for birthdays, the existing `reviewReminderSent` flag for
+  reminders), and it also runs once immediately at boot so a deploy doesn't
+  mean waiting up to 5 minutes to catch up.
+
+The IST math is hardcoded as a fixed +5:30 offset from UTC (`lib/notifications.ts`),
+not read from the server's system timezone — so unlike a cron-time approach,
+this is correct regardless of what timezone the box's clock is set to.
+
+`npm run notify:birthdays` / `npm run notify:review-reminders` still exist as
+manual on-demand entry points into the same shared logic (`lib/notifications.ts`)
+for testing without restarting the server — not required for production to work.
+
 ## Budget — ₹1000/month
 
 [Guessing] on exact current AWS prices — verify on AWS's pricing pages before
@@ -169,3 +198,5 @@ which button you click in the admin gallery form.
 - [ ] Test one real upload end-to-end (join form photo) and confirm it renders from the S3 URL
 - [ ] Backup cron installed and tested once manually (`./deploy/backup-db.sh`)
 - [ ] `npm run seed:admin` run once against production Mongo to create the real first admin
+- [ ] VAPID keys set in `.env.local` — the notification scheduler starts itself on boot, no cron to install
+- [ ] `npm run sync-indexes` run after this deploy and after any future one that changes a model's indexes — Mongoose's background autoIndex isn't guaranteed to finish before the app starts querying

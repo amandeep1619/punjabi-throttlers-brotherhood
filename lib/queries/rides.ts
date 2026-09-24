@@ -1,4 +1,6 @@
-import "server-only";
+// No "server-only" guard here (unlike most lib/ files) — the notification
+// cron scripts import this directly via tsx, outside the Next.js bundler,
+// which would throw immediately on the `server-only` marker package.
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
@@ -145,4 +147,18 @@ export async function completeRide(rideId: string) {
   } finally {
     await session.endSession();
   }
+}
+
+/** Completed rides at least 24h old with no review-reminder push sent yet. */
+export async function getRidesNeedingReviewReminder() {
+  await connectToDatabase();
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return Ride.find({ status: "completed", reviewReminderSent: false, completedAt: { $lte: cutoff } })
+    .select("title enrolledMembers")
+    .lean();
+}
+
+export async function markReviewReminderSent(rideId: string) {
+  await connectToDatabase();
+  await Ride.updateOne({ _id: rideId }, { reviewReminderSent: true });
 }

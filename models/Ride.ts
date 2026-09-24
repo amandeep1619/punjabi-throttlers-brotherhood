@@ -29,6 +29,7 @@ export interface RideDoc extends Document {
   tags: string[];
   featured: boolean;
   kmAwarded: boolean;
+  reviewReminderSent: boolean;
   maxSlots?: number;
   completedAt?: Date;
   banner: RideMedia;
@@ -76,6 +77,9 @@ const RideSchema = new Schema<RideDoc>(
     tags: { type: [String], default: [], index: true },
     featured: { type: Boolean, default: false },
     kmAwarded: { type: Boolean, default: false },
+    // Same idempotency pattern as kmAwarded — the review-reminder cron
+    // matches on this being false, never re-sends once flipped.
+    reviewReminderSent: { type: Boolean, default: false },
     // Optional — absent/undefined means unlimited slots, no capacity UI shown.
     maxSlots: { type: Number, min: 1 },
     // Set once, the moment the ride is actually marked completed — reviews
@@ -90,6 +94,14 @@ const RideSchema = new Schema<RideDoc>(
   { timestamps: true }
 );
 
-RideSchema.index({ startDate: -1 });
+RideSchema.index({ startDate: -1 }); // unfiltered/status-agnostic listing (listRides with no status filter)
+// status + startDate together — serves getFeaturedRide/getNextUpcomingRide/
+// listUpcomingRides/listRecentCompletedRides in one index scan instead of an
+// index scan on status followed by an in-memory sort (confirmed via
+// .explain() before this was added: a SORT stage sat on top of the FETCH).
+RideSchema.index({ status: 1, startDate: 1 });
+// Serves the review-reminder cron's exact filter shape (completed rides,
+// not yet reminded, old enough) without a collection scan.
+RideSchema.index({ status: 1, reviewReminderSent: 1, completedAt: 1 });
 
 export const Ride: Model<RideDoc> = models.Ride || model<RideDoc>("Ride", RideSchema);

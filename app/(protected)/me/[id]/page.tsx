@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import MeEditForm from "@/components/profile/MeEditForm";
 import PhotoUpload from "@/components/profile/PhotoUpload";
 import ProfileSubNav from "@/components/layout/ProfileSubNav";
+import { PushSubscribe } from "@/components/profile/PushSubscribe";
 import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -54,6 +55,10 @@ export default async function MyProfilePage({ params }: { params: Promise<{ id: 
           <h1 className="text-2xl font-semibold text-pt-cream">{member.fullName}</h1>
           <p className="text-pt-gold font-medium">{member.memberId}</p>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <PushSubscribe />
       </div>
 
       <Card className="p-6 sm:p-8">

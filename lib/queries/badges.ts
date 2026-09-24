@@ -135,8 +135,13 @@ export async function reevaluateBadge(badgeId: string) {
 export async function reevaluateAllActiveBadges() {
   await connectToDatabase();
   const badges = await Badge.find({ active: true }).lean();
-  for (const badge of badges) {
-    const memberIds = await getQualifyingMemberIds(badge);
-    await awardBadgeToMembers(String(badge._id), memberIds);
-  }
+  // Each badge's evaluation + award touches only its own MemberBadge rows,
+  // so these are independent — running them one at a time was N sequential
+  // round trips for no reason.
+  await Promise.all(
+    badges.map(async (badge) => {
+      const memberIds = await getQualifyingMemberIds(badge);
+      await awardBadgeToMembers(String(badge._id), memberIds);
+    })
+  );
 }

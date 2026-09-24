@@ -1,4 +1,6 @@
-import "server-only";
+// No "server-only" guard here (unlike most lib/ files) — the notification
+// cron scripts import this directly via tsx, outside the Next.js bundler,
+// which would throw immediately on the `server-only` marker package.
 import { connectToDatabase } from "@/lib/db";
 import { Member } from "@/models/Member";
 import type { MemberStatus } from "@/models/Member";
@@ -25,12 +27,17 @@ export async function getTopMembers(limit = 5, excludeId?: string) {
 export async function getTodaysBirthdays() {
   await connectToDatabase();
   const today = new Date();
+  // $month/$dayOfMonth evaluate in UTC by default — comparing against
+  // getMonth()/getDate() (server-local time) silently disagrees whenever the
+  // server's local timezone isn't UTC, which is likely on a real deployment.
+  // Using the UTC getters on both sides keeps the comparison internally
+  // consistent regardless of what timezone the Node process runs under.
   return Member.find({
     status: "active",
     $expr: {
       $and: [
-        { $eq: [{ $month: "$dob" }, today.getMonth() + 1] },
-        { $eq: [{ $dayOfMonth: "$dob" }, today.getDate()] },
+        { $eq: [{ $month: "$dob" }, today.getUTCMonth() + 1] },
+        { $eq: [{ $dayOfMonth: "$dob" }, today.getUTCDate()] },
       ],
     },
   })
