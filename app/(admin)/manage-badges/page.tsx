@@ -3,8 +3,15 @@ import { listBadges } from "@/lib/queries/badges";
 import { LinkButton } from "@/components/ui/Button";
 import { RowMenu, RowMenuLink } from "@/components/admin/RowMenu";
 import { RowMenuAction } from "@/components/admin/RowMenuAction";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Manage Badges" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Manage Achievement Badges | PT Brotherhood",
+  description:
+    "Admin dashboard to create and edit the distance and ride-count achievement badges members earn with Punjabi Throttlers Brotherhood.",
+  path: "/manage-badges",
+  noIndex: true,
+});
 
 function criteriaLabel(badge: { criteriaType: string; tag?: string; threshold: number }): string {
   if (badge.criteriaType === "TOTAL_KM") return `${badge.threshold.toLocaleString("en-IN")} km covered`;

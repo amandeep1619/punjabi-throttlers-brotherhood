@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import MemberBadges from "@/components/badges/MemberBadges";
+import { pageMetadata, fitTitle, fitDescription } from "@/lib/seo";
 
 type ProfileFields = {
   memberId: string;
@@ -36,8 +37,24 @@ type ProfileFields = {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const member = await getMemberProfileById(id);
-  if (!member) return { title: "Member not found" };
-  return { title: member.fullName, description: `${member.fullName} — ${member.memberId}, Punjabi Throttlers Brotherhood` };
+  if (!member) {
+    return pageMetadata({
+      title: "Member Not Found | Punjabi Throttlers Brotherhood",
+      description: "This member profile couldn't be found — it may have been removed or the link is incorrect.",
+      path: `/members/${id}`,
+      noIndex: true,
+    });
+  }
+  return pageMetadata({
+    title: fitTitle(member.fullName, `(${member.memberId}) | PT Brotherhood`, "– Rider Profile"),
+    description: fitDescription(
+      `${member.fullName} (${member.memberId}) is a Punjabi Throttlers Brotherhood rider.`,
+      "View their kilometres ridden, motorcycle, and club achievement badges here."
+    ),
+    path: `/members/${id}`,
+    // Requires login — not actually crawlable, so it shouldn't be indexed.
+    noIndex: true,
+  });
 }
 
 export default async function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {

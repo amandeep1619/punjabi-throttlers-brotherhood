@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { getPolicies } from "@/lib/queries/policies";
 import { SectionHeading, Card } from "@/components/ui/Card";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Policies & Guidelines",
-  description: "The rules every Punjabi Throttlers Brotherhood rider agrees to follow.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Rules & Riding Policies | Punjabi Throttlers Brotherhood",
+  description:
+    "Read the riding gear, safety, and conduct policies every Punjabi Throttlers Brotherhood member agrees to follow on every group ride we organise.",
+  path: "/policies",
+});
 
 export default async function PoliciesPage() {
   const sections = await getPolicies();

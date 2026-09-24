@@ -7,8 +7,25 @@ import { Card } from "@/components/ui/Card";
 import RideForm, { type RideFormDefaults } from "@/components/admin/RideForm";
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { DeleteRideButton } from "@/components/admin/DeleteRideButton";
+import { pageMetadata, fitTitle, fitDescription } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Edit Ride" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const ride = await getRideRaw(id);
+  return pageMetadata({
+    title: ride
+      ? fitTitle(`Admin – Edit ${ride.title}`, "| PT Brotherhood", "Ride Details")
+      : "Admin – Edit Ride | PT Brotherhood Club",
+    description: ride
+      ? fitDescription(
+          `Admin form to edit "${ride.title}" — update the route, distance, dates, status, tags, banner, and gallery for this ride.`,
+          "Punjabi Throttlers Brotherhood."
+        )
+      : "This ride couldn't be found in the admin dashboard — it may have been removed or the link is incorrect.",
+    path: `/manage-rides/${id}`,
+    noIndex: true,
+  });
+}
 
 type RideRaw = {
   _id: string;

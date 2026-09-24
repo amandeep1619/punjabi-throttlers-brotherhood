@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import { getPolicies } from "@/lib/queries/policies";
 import { toPlain } from "@/lib/serialize";
 import { PolicyEditor } from "@/components/admin/PolicyEditor";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Manage Policies" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Edit Club Rules & Policies | PT Brotherhood",
+  description:
+    "Admin dashboard to add, edit, and reorder the riding gear, safety, and conduct policies published on the Punjabi Throttlers Brotherhood site.",
+  path: "/manage-policies",
+  noIndex: true,
+});
 
 export default async function ManagePoliciesPage() {
   const sections = await getPolicies();

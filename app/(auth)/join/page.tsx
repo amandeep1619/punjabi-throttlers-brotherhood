@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import JoinForm from "@/components/join/JoinForm";
 import { SectionHeading } from "@/components/ui/Card";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Join the Brotherhood",
-  description: "Apply to join Punjabi Throttlers Brotherhood — fill in your details and an admin will review your application.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Join the Brotherhood – Become a Member | PT Brotherhood",
+  description:
+    "Apply to join Punjabi Throttlers Brotherhood. Share your details and riding experience, and an admin will review your membership application.",
+  path: "/join",
+});
 
 export default function JoinPage() {
   return (

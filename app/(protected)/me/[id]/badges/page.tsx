@@ -3,8 +3,18 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import ProfileSubNav from "@/components/layout/ProfileSubNav";
 import MemberBadges from "@/components/badges/MemberBadges";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "My Badges" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return pageMetadata({
+    title: "My Riding Achievements & Badges | PT Brotherhood Club",
+    description:
+      "View every achievement badge you've earned with Punjabi Throttlers Brotherhood for the distance ridden and rides completed with the club.",
+    path: `/me/${id}/badges`,
+    noIndex: true,
+  });
+}
 
 export default async function MyBadgesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

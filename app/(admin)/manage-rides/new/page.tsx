@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { Card } from "@/components/ui/Card";
 import RideForm from "@/components/admin/RideForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Plan New Ride" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Plan a New Group Ride | PT Brotherhood Club",
+  description:
+    "Admin form to plan a new Punjabi Throttlers Brotherhood group ride — set the route, distance, dates, banner image, and rider slots.",
+  path: "/manage-rides/new",
+  noIndex: true,
+});
 
 export default function NewRidePage() {
   return (

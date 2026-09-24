@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
 import { toPlain } from "@/lib/serialize";
 import { RosterManager } from "@/components/admin/RosterManager";
+import { pageMetadata, fitTitle, fitDescription } from "@/lib/seo";
 
 type RosterMember = {
   _id: string;
@@ -15,9 +16,26 @@ type RosterMember = {
   primaryMobile: string;
 };
 
-export const metadata: Metadata = { title: "Manage Ride Riders" };
-
 const ROSTER_FIELDS = "memberId fullName bloodGroup location motorcycle primaryMobile";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  await connectToDatabase();
+  const ride = await Ride.findById(id).select("title");
+  return pageMetadata({
+    title: ride
+      ? fitTitle(`Admin – ${ride.title} Riders`, "| PT Brotherhood", "Roster")
+      : "Admin – Manage Ride Riders | PT Brotherhood",
+    description: ride
+      ? fitDescription(
+          `Admin roster for "${ride.title}" — view enrolled riders' blood group, city, and bike details.`,
+          "Export the full roster as a text file here."
+        )
+      : "This ride's roster couldn't be found in the admin dashboard — it may have been removed or the link is incorrect.",
+    path: `/manage-rides/${id}/members`,
+    noIndex: true,
+  });
+}
 
 export default async function ManageRideMembersPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

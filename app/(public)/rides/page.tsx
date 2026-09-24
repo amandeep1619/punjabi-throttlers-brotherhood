@@ -6,11 +6,14 @@ import { RideFilters } from "@/components/rides/RideFilters";
 import { RideCard, type RideCardData } from "@/components/rides/RideCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { SectionHeading } from "@/components/ui/Card";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Rides",
-  description: "Browse every Punjabi Throttlers Brotherhood ride — upcoming, completed, and cancelled.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Browse All Group Rides | Punjabi Throttlers Brotherhood",
+  description:
+    "Browse every Punjabi Throttlers Brotherhood ride — upcoming weekend getaways, completed highway runs, and cancelled rides, all in one place.",
+  path: "/rides",
+});
 
 export default async function RidesPage({
   searchParams,

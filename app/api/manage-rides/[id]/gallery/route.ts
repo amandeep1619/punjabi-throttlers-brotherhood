@@ -15,18 +15,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!ride) return NextResponse.json({ error: "Ride not found" }, { status: 404 });
 
   const formData = await request.formData();
-  const file = formData.get("file");
+  const files = formData.getAll("file").filter((f): f is File => f instanceof File && f.size > 0);
 
-  if (file instanceof File && file.size > 0) {
-    const type = file.type.startsWith("video") ? "video" : "photo";
-    let url: string;
+  if (files.length > 20) {
+    return NextResponse.json({ error: "Select at most 20 photos at a time." }, { status: 400 });
+  }
+
+  if (files.length > 0) {
+    // Uploads are always photos — saveFile itself now rejects anything else,
+    // video only ever comes in as an external link (below).
+    let urls: string[];
     try {
-      url = await saveFile(file, "gallery");
+      urls = await Promise.all(files.map((file) => saveFile(file, "gallery")));
     } catch (err) {
       if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
       throw err;
     }
-    ride.gallery.push({ url, source: "upload", type });
+    ride.gallery.push(...urls.map((url) => ({ url, source: "upload" as const, type: "photo" as const })));
   } else {
     const parsed = galleryExternalSchema.safeParse(Object.fromEntries(formData.entries()));
     if (!parsed.success) {

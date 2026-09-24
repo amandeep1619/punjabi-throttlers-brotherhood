@@ -8,8 +8,15 @@ import { Pagination } from "@/components/ui/Pagination";
 import { RowMenu, RowMenuLink } from "@/components/admin/RowMenu";
 import { RowMenuAction } from "@/components/admin/RowMenuAction";
 import { DebouncedSearch } from "@/components/admin/DebouncedSearch";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Manage Members" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Manage All Club Members | PT Brotherhood Club",
+  description:
+    "Admin dashboard to review pending applications, approve or ban members, and manage every Punjabi Throttlers Brotherhood rider profile.",
+  path: "/manage-members",
+  noIndex: true,
+});
 
 export default async function ManageMembersPage({
   searchParams,

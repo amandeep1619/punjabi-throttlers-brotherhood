@@ -15,6 +15,7 @@ import { ReviewForm } from "@/components/rides/ReviewForm";
 import { ReviewList } from "@/components/rides/ReviewList";
 import { StarDisplay } from "@/components/ui/StarRating";
 import { getRideReviews, getMemberReviewForRide, getReviewEligibility } from "@/lib/queries/reviews";
+import { pageMetadata, fitTitle, fitDescription } from "@/lib/seo";
 
 type EnrolledMember = { _id: string; memberId: string; fullName: string; photoUrl?: string; location?: string };
 type RideDetail = {
@@ -37,8 +38,15 @@ type RideDetail = {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const ride = await getRideById(id);
-  if (!ride) return { title: "Ride not found" };
-  return { title: ride.title, description: ride.description.slice(0, 160) };
+  if (!ride) return pageMetadata({ title: "Ride Not Found | Punjabi Throttlers Brotherhood", description: "This ride couldn't be found — it may have been removed or the link is incorrect. Browse our other rides instead.", path: `/rides/${id}`, noIndex: true });
+  return pageMetadata({
+    title: fitTitle(ride.title, "| PT Brotherhood Ride", "– Group Ride"),
+    description: fitDescription(
+      ride.description,
+      "Check dates, distance, and enroll for this Punjabi Throttlers Brotherhood group ride today."
+    ),
+    path: `/rides/${id}`,
+  });
 }
 
 export default async function RideDetailPage({ params }: { params: Promise<{ id: string }> }) {

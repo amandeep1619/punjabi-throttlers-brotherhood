@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getClubStats } from "@/lib/queries/stats";
 import { jsonLdScript } from "@/lib/jsonLd";
+import { pageMetadata, canonicalUrl } from "@/lib/seo";
 import { getTodaysBirthdays } from "@/lib/queries/members";
 import { listUpcomingRides, listRecentCompletedRides, isRideEnrolled } from "@/lib/queries/rides";
 import { getTopMembers } from "@/lib/queries/members";
@@ -14,11 +15,12 @@ import TopMembersSection from "@/components/home/TopMembersSection";
 import type { RideCardData } from "@/components/rides/RideCard";
 import type { MemberCardData } from "@/components/members/MemberCard";
 
-export const metadata: Metadata = {
-  title: "Home",
+export const metadata: Metadata = pageMetadata({
+  title: "Punjabi Throttlers Brotherhood – Motorcycle Riding Club",
   description:
-    "Punjabi Throttlers Brotherhood — a brotherhood of riders united by the road. Group rides, real camaraderie, and a community of responsible riders.",
-};
+    "Punjabi Throttlers Brotherhood is a community of responsible motorcycle riders. Explore upcoming group rides, meet members, and apply to join today.",
+  path: "/",
+});
 
 export default async function HomePage() {
   const session = await getSession();
@@ -37,13 +39,29 @@ export default async function HomePage() {
     completedRides.filter((r) => isRideEnrolled(r, session?.userId)).map((r) => String(r._id))
   );
 
+  // @graph: the org itself, the site (for the main url), and its key sections
+  // (join/members/rides/policies) as SiteNavigationElement entries — gives
+  // Google a structured map of the site beyond just the homepage.
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "SportsOrganization",
-    name: "Punjabi Throttlers Brotherhood",
-    description: "A brotherhood of riders united by the road.",
-    url: process.env.NEXT_PUBLIC_SITE_URL,
-    logo: `${process.env.NEXT_PUBLIC_SITE_URL}/brand/logo.png`,
+    "@graph": [
+      {
+        "@type": "SportsOrganization",
+        name: "Punjabi Throttlers Brotherhood",
+        description: "A brotherhood of riders united by the road.",
+        url: canonicalUrl("/"),
+        logo: canonicalUrl("/brand/logo.png"),
+      },
+      {
+        "@type": "WebSite",
+        name: "Punjabi Throttlers Brotherhood",
+        url: canonicalUrl("/"),
+      },
+      { "@type": "SiteNavigationElement", name: "Join", url: canonicalUrl("/join") },
+      { "@type": "SiteNavigationElement", name: "Members", url: canonicalUrl("/members") },
+      { "@type": "SiteNavigationElement", name: "Rides", url: canonicalUrl("/rides") },
+      { "@type": "SiteNavigationElement", name: "Policies", url: canonicalUrl("/policies") },
+    ],
   };
 
   return (

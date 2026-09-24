@@ -4,8 +4,18 @@ import { getSession } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
 import ProfileSubNav from "@/components/layout/ProfileSubNav";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Change Password" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return pageMetadata({
+    title: "Change Your Account Password | PT Brotherhood Club",
+    description:
+      "Update the password for your Punjabi Throttlers Brotherhood member account to keep your rider profile and ride history secure.",
+    path: `/me/${id}/password`,
+    noIndex: true,
+  });
+}
 
 export default async function ChangePasswordPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { Card } from "@/components/ui/Card";
 import BadgeForm from "@/components/admin/BadgeForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Create Badge" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Create a New Achievement Badge | PT Brotherhood",
+  description:
+    "Admin form to create a new Punjabi Throttlers Brotherhood achievement badge — set its icon, criteria, distance threshold, and status.",
+  path: "/manage-badges/new",
+  noIndex: true,
+});
 
 export default function NewBadgePage() {
   return (

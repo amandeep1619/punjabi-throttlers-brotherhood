@@ -7,8 +7,18 @@ import { Card } from "@/components/ui/Card";
 import MeEditForm from "@/components/profile/MeEditForm";
 import PhotoUpload from "@/components/profile/PhotoUpload";
 import ProfileSubNav from "@/components/layout/ProfileSubNav";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "My Profile" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return pageMetadata({
+    title: "Manage Your Rider Profile | PT Brotherhood Members",
+    description:
+      "Update your personal details, motorcycle information, and emergency contact on your Punjabi Throttlers Brotherhood member profile page.",
+    path: `/me/${id}`,
+    noIndex: true,
+  });
+}
 
 type OwnProfile = {
   memberId: string;

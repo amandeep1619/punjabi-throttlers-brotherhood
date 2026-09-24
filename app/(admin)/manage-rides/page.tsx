@@ -6,8 +6,15 @@ import { Pagination } from "@/components/ui/Pagination";
 import { LinkButton } from "@/components/ui/Button";
 import { RowMenu, RowMenuLink } from "@/components/admin/RowMenu";
 import { RideStatusActions } from "@/components/admin/RideStatusActions";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Manage Rides" };
+export const metadata: Metadata = pageMetadata({
+  title: "Admin – Manage All Club Rides | PT Brotherhood Club",
+  description:
+    "Admin dashboard to plan new rides, edit ride details, manage enrolled riders, and mark Punjabi Throttlers Brotherhood rides complete.",
+  path: "/manage-rides",
+  noIndex: true,
+});
 
 export default async function ManageRidesPage({
   searchParams,

@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import LoginForm from "@/components/auth/LoginForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Login",
-  description: "Log in to your Punjabi Throttlers Brotherhood member account.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Member Login – Punjabi Throttlers Brotherhood Club",
+  description:
+    "Log in to your Punjabi Throttlers Brotherhood member account to view upcoming rides, track your kilometres, and manage your rider profile.",
+  path: "/login",
+  noIndex: true,
+});
 
 export default function LoginPage() {
   return (

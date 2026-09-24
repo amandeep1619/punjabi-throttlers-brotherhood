@@ -5,11 +5,16 @@ import { toPlain } from "@/lib/serialize";
 import { MemberCard, type MemberCardData } from "@/components/members/MemberCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { SectionHeading } from "@/components/ui/Card";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Members",
-  description: "Meet every member of the Punjabi Throttlers Brotherhood.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Meet Our Club Members | Punjabi Throttlers Brotherhood",
+  description:
+    "Meet every member of the Punjabi Throttlers Brotherhood — riders united by the road, group rides, shared highways, and a love for adventure.",
+  path: "/members",
+  // Requires login — not actually crawlable, so it shouldn't be indexed.
+  noIndex: true,
+});
 
 export default async function MembersPage({
   searchParams,

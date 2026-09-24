@@ -5,8 +5,18 @@ import { listMemberRides } from "@/lib/queries/rides";
 import { toPlain } from "@/lib/serialize";
 import ProfileSubNav from "@/components/layout/ProfileSubNav";
 import { RideCard, type RideCardData } from "@/components/rides/RideCard";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "My Rides" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return pageMetadata({
+    title: "My Enrolled & Completed Rides | PT Brotherhood Club",
+    description:
+      "See every group ride you've enrolled in and completed with the Punjabi Throttlers Brotherhood, from weekend getaways to long highway runs.",
+    path: `/me/${id}/rides`,
+    noIndex: true,
+  });
+}
 
 export default async function MyRidesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
