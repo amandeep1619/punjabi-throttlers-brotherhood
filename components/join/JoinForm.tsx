@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -84,14 +85,24 @@ export default function JoinForm() {
   }
 
   if (successId) {
+    const whatsappUrl = process.env.NEXT_PUBLIC_WHATSAPP_INVITE_URL;
     return (
       <Card className="p-10 text-center">
         <p className="text-pt-gold text-sm uppercase tracking-widest mb-3">Application received</p>
-        <h2 className="text-2xl font-semibold text-pt-cream mb-3">Welcome to the family, {successId}</h2>
+        <h2 className="text-2xl font-semibold text-pt-cream mb-3">Thank you for your registration, {successId}</h2>
         <p className="text-pt-muted max-w-md mx-auto">
-          Your application is under review. An admin will approve your account soon — you&apos;ll be able to log
-          in once it&apos;s active.
+          Your account will be reviewed and approved shortly. Click the link below to join our WhatsApp group.
         </p>
+        {whatsappUrl && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-6 rounded-full bg-pt-gold px-6 py-3 text-sm font-medium text-pt-black hover:bg-pt-gold-bright"
+          >
+            Join our WhatsApp group
+          </a>
+        )}
       </Card>
     );
   }
@@ -121,7 +132,22 @@ export default function JoinForm() {
         </p>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          // Enter-key in a text field submits the nearest form natively —
+          // without this guard that would call the real onSubmit (and its
+          // schema-wide validation) from any intermediate step, same
+          // premature-submit risk as the button race above. Treat it as
+          // "advance one step" instead, exactly like clicking Next.
+          if (step < JOIN_STEPS.length - 1) {
+            e.preventDefault();
+            handleNext();
+            return;
+          }
+          handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-6"
+      >
         {step === 0 && (
           <div className="grid sm:grid-cols-2 gap-5">
             <div className="sm:col-span-2">
@@ -220,19 +246,32 @@ export default function JoinForm() {
           </div>
         )}
 
+        <p className="text-xs text-pt-muted">
+          By joining you agree with our{" "}
+          <Link href="/policies" className="text-pt-gold hover:underline">
+            policies
+          </Link>
+          .
+        </p>
+
         <div className="flex items-center justify-between pt-4">
           <Button type="button" variant="ghost" onClick={back} disabled={step === 0}>
             Back
           </Button>
-          {step < JOIN_STEPS.length - 1 ? (
-            <Button type="button" onClick={handleNext}>
-              Next
-            </Button>
-          ) : (
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Submitting…" : "Submit Application"}
-            </Button>
-          )}
+          {/* Always the same type="button" element (never swapped for a
+              type="submit" one at this exact spot) — a real native submit
+              button appearing here at the moment "Next" is clicked lets a
+              single physical click's mousedown/mouseup straddle the
+              re-render and land on the new button, submitting the whole
+              application a step early with defaulted-blank fields. Confirmed
+              reproducible; onClick now always decides explicitly instead. */}
+          <Button
+            type="button"
+            onClick={step < JOIN_STEPS.length - 1 ? handleNext : handleSubmit(onSubmit)}
+            disabled={submitting}
+          >
+            {step < JOIN_STEPS.length - 1 ? "Next" : submitting ? "Submitting…" : "Submit Application"}
+          </Button>
         </div>
       </form>
     </Card>
