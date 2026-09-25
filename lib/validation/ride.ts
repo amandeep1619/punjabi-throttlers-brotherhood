@@ -43,6 +43,18 @@ export const rideFormSchema = z.object({
     (v) => (v === "" || v === undefined || v === null ? undefined : v),
     z.coerce.number().min(0).optional()
   ),
+  // The form serializes its repeatable day-rows into one JSON string field
+  // (FormData can't carry a nested array natively) — parsed back into an
+  // array here before validating each row.
+  itinerary: z.preprocess((v) => {
+    if (Array.isArray(v)) return v;
+    if (typeof v !== "string" || v.trim() === "") return [];
+    try {
+      return JSON.parse(v);
+    } catch {
+      return v;
+    }
+  }, z.array(rideItinerarySchema)),
 });
 
 export type RideFormInput = z.infer<typeof rideFormSchema>;

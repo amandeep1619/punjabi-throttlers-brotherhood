@@ -26,6 +26,7 @@ export type RideFormDefaults = {
   currentBannerUrl?: string;
   maxSlots?: number | "";
   budget?: number | "";
+  itinerary?: { day: string; title: string; description: string }[];
 };
 
 export default function RideForm({
@@ -38,6 +39,21 @@ export default function RideForm({
   const router = useRouter();
   const showToast = useUiStore((s) => s.showToast);
   const [submitting, setSubmitting] = useState(false);
+
+  // FormData can't carry a nested array natively — the day-rows are kept as
+  // component state and serialized into one hidden JSON field on submit
+  // (parsed back into an array server-side, see lib/validation/ride.ts).
+  const [itinerary, setItinerary] = useState(defaults?.itinerary ?? []);
+
+  function addDay() {
+    setItinerary((prev) => [...prev, { day: `Day ${prev.length + 1}`, title: "", description: "" }]);
+  }
+  function updateDay(index: number, field: "day" | "title" | "description", value: string) {
+    setItinerary((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+  }
+  function removeDay(index: number) {
+    setItinerary((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -147,6 +163,56 @@ export default function RideForm({
           <MemberMultiSelect name="enrolledMemberIds" />
         </div>
       )}
+
+      <div className="border-t border-pt-border pt-6">
+        <div className="flex items-center justify-between mb-1.5">
+          <label className={`${labelClass} mb-0`}>Itinerary (optional)</label>
+          <button type="button" onClick={addDay} className="text-xs text-pt-gold hover:underline">
+            + Add Day
+          </button>
+        </div>
+        {itinerary.length === 0 ? (
+          <p className="text-xs text-pt-muted">No itinerary yet — add a day to start building one.</p>
+        ) : (
+          <div className="space-y-4">
+            {itinerary.map((item, i) => (
+              <div key={i} className="rounded-lg border border-pt-border bg-pt-black-soft p-4">
+                <div className="grid sm:grid-cols-[120px_1fr_auto] gap-3 items-start">
+                  <input
+                    value={item.day}
+                    onChange={(e) => updateDay(i, "day", e.target.value)}
+                    placeholder="Day 1"
+                    required
+                    className={inputClass}
+                  />
+                  <input
+                    value={item.title}
+                    onChange={(e) => updateDay(i, "title", e.target.value)}
+                    placeholder="Assembly & Departure"
+                    required
+                    className={inputClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeDay(i)}
+                    className="text-xs text-red-300 hover:underline sm:mt-2.5 sm:justify-self-end"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <textarea
+                  value={item.description}
+                  onChange={(e) => updateDay(i, "description", e.target.value)}
+                  placeholder="Description (optional)"
+                  rows={2}
+                  className={`${inputClass} mt-3`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <input type="hidden" name="itinerary" value={JSON.stringify(itinerary)} />
+      </div>
 
       <div className="border-t border-pt-border pt-6">
         <BannerUploadField previewUrl={defaults?.currentBannerUrl} externalUrl={defaults?.bannerUrl} />

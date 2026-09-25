@@ -40,6 +40,7 @@ type RideRaw = {
   maxSlots?: number;
   budget?: number;
   banner?: { url: string; source: string };
+  itinerary: { day: string; title: string; description: string }[];
   gallery: { _id: string; url: string; type: "photo" | "video"; source: "upload" | "external" }[];
 };
 
@@ -66,6 +67,7 @@ export default async function EditRidePage({ params }: { params: Promise<{ id: s
     budget: ride.budget ?? "",
     bannerUrl: ride.banner?.source === "external" ? ride.banner.url : "",
     currentBannerUrl: ride.banner?.url,
+    itinerary: ride.itinerary,
   };
 
   return (
