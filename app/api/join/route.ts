@@ -28,18 +28,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
   }
 
+  // Generated before the upload (not after) so the photo, if any, can live
+  // under this member's own memberId-keyed S3 folder.
+  const memberId = await getNextMemberId();
+
   let photoUrl: string | undefined;
   const photo = formData.get("photo");
   if (photo instanceof File && photo.size > 0) {
     try {
-      photoUrl = await saveFile(photo, "members");
+      photoUrl = await saveFile(photo, { kind: "member-profile", memberId });
     } catch (err) {
       if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
       throw err;
     }
   }
 
-  const memberId = await getNextMemberId();
   const passwordHash = await hashPassword(data.password);
 
   const member = await Member.create({

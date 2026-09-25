@@ -10,6 +10,7 @@
     "seed:admin": "tsx scripts/seed-admin.ts",
     "seed:policies": "tsx scripts/seed-policies.ts",
     "seed:sample": "tsx scripts/seed-sample-data.ts",
+    "seed:full-reset": "tsx scripts/seed-full-reset.ts",
     "seed:review-test": "tsx scripts/seed-review-test-rides.ts",
     "seed:badges": "tsx scripts/seed-badges.ts",
     "notify:birthdays": "tsx scripts/notify-birthdays.ts",

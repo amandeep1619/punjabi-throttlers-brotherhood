@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (bannerFile instanceof File && bannerFile.size > 0) {
     const oldBanner = ride.banner;
     try {
-      ride.banner = { url: await saveFile(bannerFile, "rides"), source: "upload" };
+      ride.banner = { url: await saveFile(bannerFile, { kind: "ride-banner", rideId: id }), source: "upload" };
     } catch (err) {
       if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
       throw err;

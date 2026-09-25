@@ -5,9 +5,34 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 // S3-backed storage. Every caller only ever calls saveFile/deleteFile, so this
 // is the one place that knows about buckets/keys — see DEPLOYMENT.md for the
 // bucket policy + IAM setup this expects.
+//
+// Key layout (fixed, not configurable):
+//   member-profile-images/<memberId>/<uuid>.<ext>
+//   badges/<badge-name-slug>/<uuid>.<ext>
+//   rides/<rideId>/banner/<uuid>.<ext>
+//   rides/<rideId>/images/<uuid>.<ext>
+export type UploadTarget =
+  | { kind: "member-profile"; memberId: string }
+  | { kind: "badge"; badgeName: string }
+  | { kind: "ride-banner"; rideId: string }
+  | { kind: "ride-photo"; rideId: string };
 
-const UPLOAD_FOLDERS = ["members", "rides", "gallery"] as const;
-export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
+function keyPrefix(target: UploadTarget): string {
+  switch (target.kind) {
+    case "member-profile":
+      return `member-profile-images/${target.memberId}`;
+    case "badge":
+      return `badges/${slugify(target.badgeName)}`;
+    case "ride-banner":
+      return `rides/${target.rideId}/banner`;
+    case "ride-photo":
+      return `rides/${target.rideId}/images`;
+  }
+}
+
+function slugify(name: string): string {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "badge";
+}
 
 const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15MB
 
@@ -56,10 +81,7 @@ function publicBaseUrl(): string {
   return (process.env.AWS_S3_PUBLIC_URL || `https://${bucket}.s3.${region}.amazonaws.com`).replace(/\/$/, "");
 }
 
-export async function saveFile(file: File, folder: UploadFolder): Promise<string> {
-  if (!UPLOAD_FOLDERS.includes(folder)) {
-    throw new Error(`Invalid upload folder: ${folder}`);
-  }
+export async function saveFile(file: File, target: UploadTarget): Promise<string> {
   if (file.size > MAX_FILE_BYTES) {
     throw new UploadError("File is too large (max 15MB).");
   }
@@ -73,7 +95,7 @@ export async function saveFile(file: File, folder: UploadFolder): Promise<string
   }
 
   const s3 = getS3();
-  const key = `${folder}/${randomUUID()}${ext}`;
+  const key = `${keyPrefix(target)}/${randomUUID()}${ext}`;
   await s3.send(
     new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET,

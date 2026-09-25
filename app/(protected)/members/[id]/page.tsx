@@ -128,6 +128,17 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
                 confirmMessage={`Are you sure you want to ${member.status === "banned" ? "unban" : "ban"} ${member.fullName}?`}
                 successMessage={member.status === "banned" ? "Member unbanned" : "Member banned"}
               />
+              <AdminActionButton
+                url={`/api/manage-members/${id}/role`}
+                label={member.role === "admin" ? "Remove Admin" : "Make Admin"}
+                variant={member.role === "admin" ? "danger" : "outline"}
+                confirmMessage={
+                  member.role === "admin"
+                    ? `Remove admin access from ${member.fullName}?`
+                    : `Make ${member.fullName} an admin? They'll get full access to the admin dashboard.`
+                }
+                successMessage={member.role === "admin" ? "Admin access removed" : `${member.fullName} is now an admin`}
+              />
             </div>
           )}
         </div>

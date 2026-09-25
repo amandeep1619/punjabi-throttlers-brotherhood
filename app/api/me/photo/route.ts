@@ -15,12 +15,12 @@ export async function POST(request: NextRequest) {
   }
 
   await connectToDatabase();
-  const member = await Member.findById(session.userId).select("photoUrl");
+  const member = await Member.findById(session.userId).select("photoUrl memberId");
   if (!member) return NextResponse.json({ error: "Member not found" }, { status: 404 });
 
   let newUrl: string;
   try {
-    newUrl = await saveFile(photo, "members");
+    newUrl = await saveFile(photo, { kind: "member-profile", memberId: member.memberId });
   } catch (err) {
     if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
     throw err;

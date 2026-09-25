@@ -33,7 +33,7 @@ export interface RideDoc extends Document {
   maxSlots?: number;
   budget?: number;
   completedAt?: Date;
-  banner: RideMedia;
+  banner?: RideMedia;
   itinerary: RideItineraryItem[];
   gallery: Types.DocumentArray<RideGalleryItem>;
   enrolledMembers: Types.ObjectId[];
@@ -89,7 +89,7 @@ const RideSchema = new Schema<RideDoc>(
     // become allowed 24h after this, not after startDate/endDate (a ride can
     // be marked completed well after it actually happened).
     completedAt: { type: Date },
-    banner: { type: RideMediaSchema, required: true },
+    banner: { type: RideMediaSchema },
     itinerary: { type: [RideItinerarySchema], default: [] },
     gallery: { type: [RideGalleryItemSchema], default: [] },
     enrolledMembers: { type: [Schema.Types.ObjectId], ref: "Member", default: [] },

@@ -6,6 +6,7 @@ import { Badge, type BadgeDoc } from "@/models/Badge";
 import { MemberBadge } from "@/models/MemberBadge";
 import { Member } from "@/models/Member";
 import { Ride } from "@/models/Ride";
+import { deleteFile } from "@/lib/storage";
 
 export async function listBadges() {
   await connectToDatabase();
@@ -20,7 +21,8 @@ export async function getBadge(id: string) {
 export async function createBadge(data: {
   name: string;
   description: string;
-  icon: string;
+  icon?: string;
+  imageUrl?: string;
   criteriaType: "RIDE_COUNT" | "TOTAL_KM";
   tag?: string;
   threshold: number;
@@ -35,7 +37,8 @@ export async function updateBadge(
   data: Partial<{
     name: string;
     description: string;
-    icon: string;
+    icon?: string;
+    imageUrl?: string;
     criteriaType: "RIDE_COUNT" | "TOTAL_KM";
     tag?: string;
     threshold: number;
@@ -43,21 +46,30 @@ export async function updateBadge(
   }>
 ) {
   await connectToDatabase();
-  // $unset tag when it's explicitly cleared (criteriaType switched to TOTAL_KM) —
-  // an ordinary $set would leave a stale tag value sitting on the document.
-  const { tag, ...rest } = data;
+  // $unset tag/imageUrl when explicitly cleared — an ordinary $set with an
+  // undefined value gets stripped by the driver instead of clearing the field.
+  const { tag, imageUrl, ...rest } = data;
   const update: Record<string, unknown> = { $set: rest };
+  const unset: Record<string, string> = {};
   if ("tag" in data) {
     if (tag) (update.$set as Record<string, unknown>).tag = tag;
-    else update.$unset = { tag: "" };
+    else unset.tag = "";
   }
+  if ("imageUrl" in data) {
+    if (imageUrl) (update.$set as Record<string, unknown>).imageUrl = imageUrl;
+    else unset.imageUrl = "";
+  }
+  if (Object.keys(unset).length > 0) update.$unset = unset;
   return Badge.findByIdAndUpdate(id, update, { returnDocument: "after" });
 }
 
 export async function deleteBadge(id: string) {
   await connectToDatabase();
   const badge = await Badge.findByIdAndDelete(id);
-  if (badge) await MemberBadge.deleteMany({ badge: id });
+  if (badge) {
+    await MemberBadge.deleteMany({ badge: id });
+    if (badge.imageUrl) await deleteFile(badge.imageUrl);
+  }
   return badge;
 }
 
@@ -65,7 +77,7 @@ export async function getMemberBadges(memberId: string) {
   await connectToDatabase();
   return MemberBadge.find({ member: memberId })
     .sort({ awardedAt: -1 })
-    .populate("badge", "name description icon criteriaType tag threshold")
+    .populate("badge", "name description icon imageUrl criteriaType tag threshold")
     .lean();
 }
 

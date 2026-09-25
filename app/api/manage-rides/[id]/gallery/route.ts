@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // video only ever comes in as an external link (below).
     let urls: string[];
     try {
-      urls = await Promise.all(files.map((file) => saveFile(file, "gallery")));
+      urls = await Promise.all(files.map((file) => saveFile(file, { kind: "ride-photo", rideId: id })));
     } catch (err) {
       if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
       throw err;

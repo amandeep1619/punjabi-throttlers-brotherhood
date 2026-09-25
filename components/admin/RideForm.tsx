@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { useUiStore } from "@/store/useUiStore";
 import { rideStatusOptions } from "@/lib/validation/ride";
 import { MemberMultiSelect } from "@/components/admin/MemberMultiSelect";
+import { BannerUploadField } from "@/components/admin/BannerUploadField";
 
 const inputClass =
   "w-full rounded-lg border border-pt-border bg-pt-black-soft px-4 py-2.5 text-pt-cream focus:outline-none focus:border-pt-gold";
@@ -21,6 +22,8 @@ export type RideFormDefaults = {
   tags: string;
   featured: boolean;
   bannerUrl: string;
+  /** Always the ride's current banner, whatever its source — preview only, never submitted directly. */
+  currentBannerUrl?: string;
   maxSlots?: number | "";
   budget?: number | "";
 };
@@ -145,15 +148,8 @@ export default function RideForm({
         </div>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-5 border-t border-pt-border pt-6">
-        <div>
-          <label className={labelClass}>Banner Image (upload)</label>
-          <input type="file" name="bannerFile" accept="image/*" className="text-sm text-pt-muted file:mr-4 file:rounded-full file:border-0 file:bg-pt-gold file:text-pt-black file:px-4 file:py-2 file:text-sm file:font-medium" />
-        </div>
-        <div>
-          <label className={labelClass}>Or Banner URL (external link)</label>
-          <input name="bannerUrl" defaultValue={defaults?.bannerUrl} placeholder="https://…" className={inputClass} />
-        </div>
+      <div className="border-t border-pt-border pt-6">
+        <BannerUploadField previewUrl={defaults?.currentBannerUrl} externalUrl={defaults?.bannerUrl} />
       </div>
 
       <Button type="submit" disabled={submitting}>

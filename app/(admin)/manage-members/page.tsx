@@ -126,6 +126,15 @@ export default async function ManageMembersPage({
                       confirmMessage={`${m.status === "banned" ? "Unban" : "Ban"} ${m.fullName}?`}
                       successMessage={m.status === "banned" ? "Member unbanned" : "Member banned"}
                     />
+                    <RowMenuAction
+                      url={`/api/manage-members/${m._id}/role`}
+                      label={m.role === "admin" ? "Remove admin" : "Make admin"}
+                      danger={m.role === "admin"}
+                      confirmMessage={
+                        m.role === "admin" ? `Remove admin access from ${m.fullName}?` : `Make ${m.fullName} an admin?`
+                      }
+                      successMessage={m.role === "admin" ? "Admin access removed" : `${m.fullName} is now an admin`}
+                    />
                   </RowMenu>
                 </td>
               </tr>

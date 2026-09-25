@@ -6,6 +6,7 @@ import { getRideById } from "@/lib/queries/rides";
 import { getSession } from "@/lib/auth";
 import { toPlain } from "@/lib/serialize";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { RideBannerImage } from "@/components/rides/RideBannerImage";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
 import { GalleryFilter } from "@/components/rides/GalleryFilter";
@@ -23,7 +24,7 @@ type RideDetail = {
   _id: string;
   title: string;
   description: string;
-  banner: { url: string; source: string };
+  banner?: { url: string; source: string };
   distanceKm: number;
   startDate: string;
   endDate?: string;
@@ -96,7 +97,7 @@ export default async function RideDetailPage({ params }: { params: Promise<{ id:
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
 
       <div className="relative h-72 sm:h-96">
-        <SmartImage src={data.banner.url} alt={data.title} fill className="object-cover" />
+        <RideBannerImage banner={data.banner} alt={data.title} className="object-cover" />
         <div className="absolute inset-0 bg-linear-to-t from-pt-black via-pt-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 mx-auto max-w-7xl px-4 sm:px-6 pb-8">
           <div className="flex items-center gap-2 mb-3">

@@ -3,6 +3,7 @@ import { listBadges } from "@/lib/queries/badges";
 import { LinkButton } from "@/components/ui/Button";
 import { RowMenu, RowMenuLink } from "@/components/admin/RowMenu";
 import { RowMenuAction } from "@/components/admin/RowMenuAction";
+import { BadgeAvatar } from "@/components/badges/BadgeAvatar";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -46,7 +47,7 @@ export default async function ManageBadgesPage() {
               <tr key={String(badge._id)} className="border-t border-pt-border/60 hover:bg-pt-black-soft/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xl">{badge.icon}</span>
+                    <BadgeAvatar name={badge.name} imageUrl={badge.imageUrl} size="sm" />
                     <div>
                       <p className="text-pt-cream font-medium">{badge.name}</p>
                       <p className="text-xs text-pt-muted">{badge.description}</p>

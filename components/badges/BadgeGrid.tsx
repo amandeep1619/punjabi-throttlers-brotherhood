@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BadgeAvatar } from "@/components/badges/BadgeAvatar";
 
 type EarnedBadge = {
   _id: string;
   awardedAt: string;
-  badge: { name: string; description: string; icon: string } | null;
+  badge: { name: string; description: string; icon?: string; imageUrl?: string } | null;
 };
 
 export function BadgeGrid({ earned }: { earned: EarnedBadge[] }) {
@@ -44,9 +45,7 @@ function BadgeItem({ earned }: { earned: EarnedBadge }) {
         onClick={() => setOpen((v) => !v)}
         className="flex w-full flex-col items-center gap-1.5 text-center"
       >
-        <div className="h-14 w-14 rounded-full bg-pt-black-soft border border-pt-gold/40 flex items-center justify-center text-2xl transition-transform hover:scale-110">
-          {badge.icon}
-        </div>
+        <BadgeAvatar name={badge.name} imageUrl={badge.imageUrl} className="transition-transform hover:scale-110" />
         <p className="text-[11px] text-pt-muted leading-tight line-clamp-2">{badge.name}</p>
       </button>
 
@@ -57,8 +56,8 @@ function BadgeItem({ earned }: { earned: EarnedBadge }) {
           aria-label={badge.name}
           className="pt-modal-in absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 flex overflow-hidden rounded-2xl border border-pt-gold/30 bg-pt-black-card shadow-2xl"
         >
-          <div className="w-20 shrink-0 flex items-center justify-center bg-pt-black-soft text-4xl">
-            {badge.icon}
+          <div className="w-20 shrink-0 flex items-center justify-center bg-pt-black-soft">
+            <BadgeAvatar name={badge.name} imageUrl={badge.imageUrl} size="lg" />
           </div>
           <div className="flex-1 p-3 min-w-0">
             <h3 className="font-semibold text-pt-cream text-sm">{badge.name}</h3>

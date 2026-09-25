@@ -6,7 +6,7 @@ import { BadgeGrid } from "@/components/badges/BadgeGrid";
 type EarnedBadge = {
   _id: string;
   awardedAt: string;
-  badge: { name: string; description: string; icon: string } | null;
+  badge: { name: string; description: string; icon?: string; imageUrl?: string } | null;
 };
 
 export default async function MemberBadges({ memberId }: { memberId: string }) {

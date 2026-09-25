@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { listRides } from "@/lib/queries/rides";
-import { SmartImage } from "@/components/ui/SmartImage";
+import { RideBannerImage } from "@/components/rides/RideBannerImage";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Pagination } from "@/components/ui/Pagination";
 import { LinkButton } from "@/components/ui/Button";
 import { RowMenu, RowMenuLink } from "@/components/admin/RowMenu";
 import { RideStatusActions } from "@/components/admin/RideStatusActions";
+import { DebouncedSearch } from "@/components/admin/DebouncedSearch";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -19,19 +21,30 @@ export const metadata: Metadata = pageMetadata({
 export default async function ManageRidesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }) {
   const sp = await searchParams;
   const page = Number(sp.page ?? 1);
-  const result = await listRides({ page, pageSize: 10 });
+  const search = sp.search ?? "";
+  const result = await listRides({ page, pageSize: 10, search });
 
-  const buildHref = (p: number) => `/manage-rides?page=${p}`;
+  const buildHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    params.set("page", String(p));
+    return `/manage-rides?${params.toString()}`;
+  };
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <h1 className="text-2xl font-semibold text-pt-cream">Rides</h1>
-        <LinkButton href="/manage-rides/new">Plan New Ride</LinkButton>
+        <div className="flex flex-wrap items-center gap-3">
+          <Suspense fallback={null}>
+            <DebouncedSearch placeholder="Search by ride name…" />
+          </Suspense>
+          <LinkButton href="/manage-rides/new">Plan New Ride</LinkButton>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -41,7 +54,7 @@ export default async function ManageRidesPage({
             className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-pt-border bg-pt-black-card p-4"
           >
             <div className="relative h-16 w-24 rounded-lg overflow-hidden shrink-0 bg-pt-black-soft">
-              <SmartImage src={ride.banner.url} alt={ride.title} fill className="object-cover" />
+              <RideBannerImage banner={ride.banner} alt={ride.title} className="object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -63,7 +76,9 @@ export default async function ManageRidesPage({
           </div>
         ))}
         {result.items.length === 0 && (
-          <p className="text-center text-pt-muted py-16">No rides yet — plan the first one.</p>
+          <p className="text-center text-pt-muted py-16">
+            {search ? "No rides match your search." : "No rides yet — plan the first one."}
+          </p>
         )}
       </div>
 

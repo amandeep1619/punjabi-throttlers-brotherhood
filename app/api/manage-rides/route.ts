@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { Types } from "mongoose";
 import { getSession } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import { Ride } from "@/models/Ride";
@@ -28,19 +29,21 @@ export async function POST(request: NextRequest) {
   }
   const data = parsed.data;
 
+  // Pre-generated so an uploaded banner can live under this ride's own
+  // rideId-keyed S3 folder — Ride.create below is told to use this same id.
+  const rideId = new Types.ObjectId();
+
   const bannerFile = formData.get("bannerFile");
-  let banner: { url: string; source: "upload" | "external" };
+  let banner: { url: string; source: "upload" | "external" } | undefined;
   if (bannerFile instanceof File && bannerFile.size > 0) {
     try {
-      banner = { url: await saveFile(bannerFile, "rides"), source: "upload" };
+      banner = { url: await saveFile(bannerFile, { kind: "ride-banner", rideId: rideId.toString() }), source: "upload" };
     } catch (err) {
       if (err instanceof UploadError) return NextResponse.json({ error: err.message }, { status: 400 });
       throw err;
     }
   } else if (data.bannerUrl) {
     banner = { url: data.bannerUrl, source: "external" };
-  } else {
-    return NextResponse.json({ error: "Provide a banner image (upload or link)" }, { status: 400 });
   }
 
   // Admin picks whoever to pre-enroll (including themselves) via the
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
 
   await connectToDatabase();
   const ride = await Ride.create({
+    _id: rideId,
     title: data.title,
     description: data.description,
     distanceKm: data.distanceKm,

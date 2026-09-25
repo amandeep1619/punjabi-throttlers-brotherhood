@@ -7,9 +7,10 @@ export const badgeCriteriaTypes = ["RIDE_COUNT", "TOTAL_KM"] as const;
 const badgeObjectSchema = z.object({
   name: z.string().trim().min(2, "Enter a badge name").max(60),
   description: z.string().trim().min(3, "Enter a description").max(200),
-  // A short icon glyph (emoji), not an uploaded image — keeps this admin
-  // form to plain text, no file storage needed for something this small.
-  icon: z.string().trim().min(1, "Enter an icon (e.g. an emoji)").max(4),
+  // Vestigial: badges display as a letter avatar (first char of the name)
+  // for now, not this icon — kept around for when real uploaded images
+  // replace both next month, so it's optional rather than required.
+  icon: z.preprocess((v) => (v === "" || v === undefined ? undefined : v), z.string().trim().max(4).optional()),
   criteriaType: z.enum(badgeCriteriaTypes),
   tag: z.preprocess((v) => (v === "" || v === undefined ? undefined : v), z.string().trim().max(40).optional()),
   threshold: z.coerce.number().int().min(1, "Threshold must be at least 1"),

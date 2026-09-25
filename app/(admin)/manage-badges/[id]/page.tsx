@@ -33,6 +33,7 @@ export default async function EditBadgePage({ params }: { params: Promise<{ id: 
     name: badge.name,
     description: badge.description,
     icon: badge.icon,
+    imageUrl: badge.imageUrl,
     criteriaType: badge.criteriaType,
     tag: badge.tag ?? "",
     threshold: badge.threshold,

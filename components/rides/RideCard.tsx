@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { FeaturedBadge } from "@/components/ui/FeaturedBadge";
-import { SmartImage } from "@/components/ui/SmartImage";
+import { RideBannerImage } from "@/components/rides/RideBannerImage";
 import { LinkButton } from "@/components/ui/Button";
 import { CalendarIcon, RoadIcon } from "@/components/ui/icons";
 
@@ -9,7 +9,7 @@ export type RideCardData = {
   _id: string;
   title: string;
   description: string;
-  banner: { url: string; source: string };
+  banner?: { url: string; source: string };
   distanceKm: number;
   startDate: string | Date;
   status: "upcoming" | "completed" | "cancelled";
@@ -35,10 +35,9 @@ export function RideCard({
   return (
     <Card className="overflow-hidden group flex flex-col h-full transition-all duration-300 hover:border-pt-gold/50 hover:-translate-y-1 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)]">
       <div className={`relative ${size === "lg" ? "h-80" : "h-52"} bg-pt-black-soft overflow-hidden`}>
-        <SmartImage
-          src={ride.banner.url}
+        <RideBannerImage
+          banner={ride.banner}
           alt={ride.title}
-          fill
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         />
         {/* Layered scrim: keeps badges legible up top and the title legible down low,
